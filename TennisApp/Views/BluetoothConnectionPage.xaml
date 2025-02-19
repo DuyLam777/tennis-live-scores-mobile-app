@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="TennisApp.Views.BluetoothConnectionPage"
+             Title="Bluetooth Connection">
+    <VerticalStackLayout>
+        <Label
+            Text="Bluetooth Connection"
+            VerticalOptions="Center"
+            HorizontalOptions="Center" />
+        
+        <!-- Button to start scanning -->
+        <Button x:Name="btnScan" Clicked="btnScan_Clicked" Text="Scan for Devices" />
+
+        <!-- List of discovered devices -->
+        <CollectionView x:Name="deviceList" SelectionMode="Single" SelectionChanged="DeviceList_SelectionChanged">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <HorizontalStackLayout Padding="10">
+                        <Label Text="{Binding Name}" FontSize="Medium" VerticalOptions="Center" />
+                        <Label Text="{Binding Id}" FontSize="Small" VerticalOptions="Center" Margin="10,0,0,0" />
+                    </HorizontalStackLayout>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <!-- Buttons for connection actions -->
+        <Button x:Name="btnConnect" Clicked="btnConnect_Clicked" Text="Connect" IsEnabled="False" />
+        <Button x:Name="btnDisconnect" Clicked="btnDisconnect_Clicked" Text="Disconnect" IsEnabled="False" />
+    </VerticalStackLayout>
+</ContentPage>
