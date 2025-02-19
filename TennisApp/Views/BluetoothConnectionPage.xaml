@@ -11,7 +11,7 @@
         
         <!-- Button to start scanning -->
         <Button x:Name="btnScan" Clicked="btnScan_Clicked" Text="Scan for Devices" />
-
+        
         <!-- List of discovered devices -->
         <CollectionView x:Name="deviceList" SelectionMode="Single" SelectionChanged="DeviceList_SelectionChanged">
             <CollectionView.ItemTemplate>
@@ -23,7 +23,7 @@
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
-
+        
         <!-- Buttons for connection actions -->
         <Button x:Name="btnConnect" Clicked="btnConnect_Clicked" Text="Connect" IsEnabled="False" />
         <Button x:Name="btnDisconnect" Clicked="btnDisconnect_Clicked" Text="Disconnect" IsEnabled="False" />

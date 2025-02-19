@@ -19,8 +19,43 @@ namespace TennisApp.Views
             deviceList.ItemsSource = _devices; // Bind the CollectionView to the devices list
         }
 
+        private async Task<bool> EnsurePermissions()
+        {
+            // Check and request ACCESS_FINE_LOCATION permission
+            var locationStatus = await Permissions.CheckStatusAsync<Permissions.LocationWhenInUse>();
+            if (locationStatus != PermissionStatus.Granted)
+            {
+                locationStatus = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
+                if (locationStatus != PermissionStatus.Granted)
+                {
+                    await DisplayAlert("Permission Denied", "Location permission is required for Bluetooth scanning.", "OK");
+                    return false;
+                }
+            }
+
+            // Check and request BLUETOOTH_SCAN and BLUETOOTH_CONNECT permissions (for Android 12+)
+            var bluetoothStatus = await Permissions.CheckStatusAsync<Permissions.Bluetooth>();
+            if (bluetoothStatus != PermissionStatus.Granted)
+            {
+                bluetoothStatus = await Permissions.RequestAsync<Permissions.Bluetooth>();
+                if (bluetoothStatus != PermissionStatus.Granted)
+                {
+                    await DisplayAlert("Permission Denied", "Bluetooth permissions are required for Bluetooth scanning.", "OK");
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         private async void btnScan_Clicked(object sender, EventArgs e)
         {
+            // Ensure permissions are granted
+            if (!await EnsurePermissions())
+            {
+                return;
+            }
+
             try
             {
                 // Ensure Bluetooth is enabled
@@ -36,6 +71,7 @@ namespace TennisApp.Views
                 // Start scanning for devices
                 _adapter.DeviceDiscovered += (s, a) =>
                 {
+                    // Add the full IDevice object to the collection
                     if (!_devices.Contains(a.Device))
                     {
                         _devices.Add(a.Device);
@@ -52,10 +88,10 @@ namespace TennisApp.Views
 
         private void DeviceList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            // Get the selected device
+            // Get the selected device from the CollectionView
             _selectedDevice = e.CurrentSelection.FirstOrDefault() as IDevice;
 
-            // Enable the Connect button if a device is selected
+            // Enable or disable the Connect button based on whether a device is selected
             btnConnect.IsEnabled = _selectedDevice != null;
         }
 
