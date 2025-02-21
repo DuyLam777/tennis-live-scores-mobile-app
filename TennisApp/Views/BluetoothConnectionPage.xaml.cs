@@ -74,7 +74,11 @@ namespace TennisApp.Views
                     // Add the full IDevice object to the collection
                     if (!_devices.Contains(a.Device))
                     {
-                        _devices.Add(a.Device);
+                        // only show the device if it has a name
+                        if (!string.IsNullOrEmpty(a.Device.Name))
+                        {
+                            _devices.Add(a.Device);
+                        }
                     }
                 };
 
