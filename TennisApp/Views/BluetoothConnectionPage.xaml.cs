@@ -15,8 +15,9 @@ namespace TennisApp.Views
         {
             InitializeComponent();
             _adapter = CrossBluetoothLE.Current.Adapter;
-            _devices = new ObservableCollection<IDevice>();
-            deviceList.ItemsSource = _devices; // Bind the CollectionView to the devices list
+            _devices = [];
+            // Bind the CollectionView to the list of devices found during scanning
+            deviceList.ItemsSource = _devices;
         }
 
         private async Task<bool> EnsurePermissions()
@@ -106,17 +107,19 @@ namespace TennisApp.Views
                 await DisplayAlert("Error", "No device selected.", "OK");
                 return;
             }
-
             try
             {
                 // Connect to the selected device
                 await _adapter.ConnectToDeviceAsync(_selectedDevice);
                 _connectedDevice = _selectedDevice;
 
+                // Navigate to the BluetoothMessagePage and pass the connected device
+                var messagePage = new BluetoothMessagePage(_connectedDevice);
+                await Navigation.PushAsync(messagePage);
+
                 // Update UI
                 btnConnect.IsEnabled = false;
                 btnDisconnect.IsEnabled = true;
-                await DisplayAlert("Success", $"Connected to {_connectedDevice.Name}", "OK");
             }
             catch (Exception ex)
             {

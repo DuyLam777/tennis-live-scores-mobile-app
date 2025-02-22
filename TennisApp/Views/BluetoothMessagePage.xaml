@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="TennisApp.Views.BluetoothMessagePage"
+             Title="Send Messages">
+    <VerticalStackLayout Padding="20">
+        <Label Text="Send Messages to Device" FontSize="Large" HorizontalOptions="Center" />
+        
+        <!-- Input for the message -->
+        <Entry x:Name="messageInput" Placeholder="Enter message" />
+
+        <!-- Button to send the message -->
+        <Button x:Name="btnSendMessage" Clicked="btnSendMessage_Clicked" Text="Send Message" />
+
+        <!-- Display sent messages -->
+        <Label Text="Sent Messages:" FontSize="Medium" Margin="0,10,0,0" />
+        <CollectionView x:Name="sentMessagesList">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Label Text="{Binding}" FontSize="Small" />
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </VerticalStackLayout>
+</ContentPage>
