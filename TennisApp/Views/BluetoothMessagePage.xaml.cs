@@ -30,19 +30,21 @@ namespace TennisApp.Views
 				foreach (var service in services)
 				{
 					// Log the service UUID for debugging
-					Console.WriteLine($"Service UUID: {service.Id}");
+					await DisplayAlert("Service UUID", service.Id.ToString(), "OK");
 
 					// Get all characteristics for the service
 					var characteristics = await service.GetCharacteristicsAsync();
 					foreach (var characteristic in characteristics)
 					{
-						Console.WriteLine($"Characteristic UUID: {characteristic.Uuid}, CanWrite: {characteristic.CanWrite}");
+						// Log the characteristic UUID for debugging
+						await DisplayAlert("Characteristic UUID", characteristic.Id.ToString(), "OK");
 
 						// Look for a characteristic that supports writing
 						if (characteristic.CanWrite)
 						{
 							_writeCharacteristic = characteristic;
-							Console.WriteLine("Found writable characteristic.");
+							// Log the writable characteristic UUID for debugging
+							await DisplayAlert("Writable Characteristic UUID", _writeCharacteristic.Id.ToString(), "OK");
 							break;
 						}
 					}
