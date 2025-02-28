@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:TennisApp"
              xmlns:converters="clr-namespace:TennisApp.Converters"
+             xmlns:viewmodels="clr-namespace:TennisApp.ViewModels"
              x:Class="TennisApp.App">
     <Application.Resources>
         <ResourceDictionary>
@@ -11,6 +12,8 @@
                 <ResourceDictionary Source="Resources/Styles/Styles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
             <converters:BooleanToColorConverter x:Key="BooleanToColorConverter"/>
+            <converters:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
+            <viewmodels:WebSocketViewModel x:Key="WebSocketViewModel"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

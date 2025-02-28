@@ -1,0 +1,38 @@
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:TennisApp.ViewModels"
+             x:Class="TennisApp.Views.WebSocketPage"
+             Title="WebSocket Test">
+    <ContentPage.BindingContext>
+        <viewmodels:WebSocketViewModel />
+    </ContentPage.BindingContext>
+
+    <VerticalStackLayout Padding="20">
+        <!-- Connect Button -->
+        <Button
+            Text="{Binding ConnectionStatus}"
+            Clicked="ConnectButton_Clicked"
+            BackgroundColor="{Binding ButtonColor}"
+            IsEnabled="{Binding IsSendMessageEnabled, Converter={StaticResource InverseBooleanConverter}}" />
+
+        <!-- Message Entry -->
+        <Entry
+            x:Name="MessageEntry"
+            Placeholder="Enter message"
+            Margin="0,20" />
+
+        <!-- Send Message Button -->
+        <Button
+            Text="Send Message"
+            Clicked="SendButton_Clicked"
+            BackgroundColor="{Binding SendMessageButtonColor}"
+            IsEnabled="{Binding IsSendMessageEnabled}" />
+
+        <!-- Status Label -->
+        <Label
+            x:Name="StatusLabel"
+            Text="Not connected"
+            VerticalOptions="End"
+            TextColor="{StaticResource Gray300}" />
+    </VerticalStackLayout>
+</ContentPage>
