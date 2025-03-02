@@ -24,7 +24,7 @@
             x:Name="MessageEntry"
             Placeholder="Enter message"
             BackgroundColor="{StaticResource Surface}"
-            TextColor="White"
+            TextColor="{StaticResource White}"
             PlaceholderColor="{StaticResource Gray500}"
             Margin="0,20" />
 

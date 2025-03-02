@@ -1,44 +1,65 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage 
+<ContentPage
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     x:Class="TennisApp.Views.BluetoothMessagePage"
     Title="Bluetooth Messages"
     BackgroundColor="{StaticResource Background}">
 
-    <StackLayout Padding="20">
-        <!-- ListView to display messages -->
-        <CollectionView 
+    <Grid
+        RowDefinitions="*,Auto"
+        Padding="20"
+        RowSpacing="10">
+
+        <!-- Message List -->
+        <CollectionView
+            Grid.Row="0"
             x:Name="messagesList"
-            BackgroundColor="{StaticResource Surface}">
+            BackgroundColor="{StaticResource Background}"
+            Margin="0,0,0,10">
+
             <CollectionView.ItemTemplate>
                 <DataTemplate>
-                    <Frame 
+                    <Frame
+                        CornerRadius="20"
+                        Margin="0,4"
+                        Padding="12"
                         BackgroundColor="{StaticResource Surface}"
-                        CornerRadius="8"
-                        Padding="10"
-                        Margin="0,4">
-                        <Label 
+                        HorizontalOptions="{Binding IsSent, Converter={StaticResource BooleanToLayoutOptionsConverter}}">
+
+                        <Label
                             Text="{Binding Text}"
                             TextColor="{Binding IsSent, Converter={StaticResource BooleanToColorConverter}}"
-                            FontSize="16"/>
+                            FontSize="16"
+                            LineBreakMode="NoWrap"
+                            MaxLines="1"
+                            HorizontalOptions="Start"
+                            VerticalOptions="Center"/>
                     </Frame>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
 
-        <!-- Input field and send button -->
-        <Entry 
-            x:Name="messageInput"
-            Placeholder="Enter message"
-            BackgroundColor="{StaticResource Surface}"
-            TextColor="White"
-            PlaceholderColor="{StaticResource Gray500}"
-            Margin="0,10"/>
+        <!-- Input Area -->
+        <Grid
+            Grid.Row="1"
+            ColumnDefinitions="*,Auto"
+            ColumnSpacing="10">
 
-        <Button 
-            Text="Send"
-            Style="{StaticResource PrimaryButton}"
-            Clicked="btnSendMessage_Clicked"/>
-    </StackLayout>
+            <Entry
+                x:Name="messageInput"
+                Placeholder="Enter message"
+                BackgroundColor="{StaticResource Surface}"
+                TextColor="{StaticResource White}"
+                PlaceholderColor="{StaticResource Gray500}"
+                Margin="0,0,0,5"
+                ClearButtonVisibility="WhileEditing"/>
+
+            <Button
+                Text="Send"
+                Style="{StaticResource PrimaryButton}"
+                Clicked="btnSendMessage_Clicked"
+                Grid.Column="1"/>
+        </Grid>
+    </Grid>
 </ContentPage>

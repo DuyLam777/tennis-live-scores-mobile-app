@@ -13,6 +13,7 @@
             </ResourceDictionary.MergedDictionaries>
             <converters:BooleanToColorConverter x:Key="BooleanToColorConverter"/>
             <converters:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
+            <converters:BooleanToLayoutOptionsConverter x:Key="BooleanToLayoutOptionsConverter"/>
             <viewmodels:WebSocketViewModel x:Key="WebSocketViewModel"/>
         </ResourceDictionary>
     </Application.Resources>

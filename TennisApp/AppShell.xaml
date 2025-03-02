@@ -6,7 +6,8 @@
     xmlns:views="clr-namespace:TennisApp.Views"
     xmlns:root="clr-namespace:TennisApp"
     Shell.FlyoutBehavior="Flyout"
-    BackgroundColor="{StaticResource Background}">
+    BackgroundColor="{StaticResource Background}"
+    FlyoutBackground="{StaticResource Background}">
 
     <!-- Flyout Menu Items -->
     <FlyoutItem Title="Home" Icon="Resources/Images/home_button.svg">

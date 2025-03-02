@@ -15,7 +15,16 @@ namespace TennisApp.Converters
         {
             if (value is bool boolValue)
             {
-                return boolValue ? Colors.Blue : Colors.Green; // Blue for sent, Green for received
+                var app = Application.Current;
+                if (
+                    app != null
+                    && app.Resources.TryGetValue("Primary", out var sentColor)
+                    && app.Resources.TryGetValue("Secondary", out var receivedColor)
+                )
+                {
+                    return boolValue ? (Color)sentColor : (Color)receivedColor;
+                }
+                throw new InvalidOperationException("Colors not found in resources");
             }
             throw new InvalidOperationException("Value must be a boolean");
         }

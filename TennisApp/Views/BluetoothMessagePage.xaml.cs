@@ -1,5 +1,5 @@
-using Plugin.BLE.Abstractions.Contracts;
 using System.Collections.ObjectModel;
+using Plugin.BLE.Abstractions.Contracts;
 
 namespace TennisApp.Views
 {
@@ -35,7 +35,11 @@ namespace TennisApp.Views
                 foreach (var service in services)
                 {
                     // Check if the service matches the HM-10 service UUID
-                    if (service.Id.ToString().Equals(Hm10ServiceUuid, StringComparison.OrdinalIgnoreCase))
+                    if (
+                        service
+                            .Id.ToString()
+                            .Equals(Hm10ServiceUuid, StringComparison.OrdinalIgnoreCase)
+                    )
                     {
                         Console.WriteLine("HM-10 Service Found");
 
@@ -44,21 +48,36 @@ namespace TennisApp.Views
                         foreach (var characteristic in characteristics)
                         {
                             // Look for the writable characteristic
-                            if (characteristic.Id.ToString().Equals(Hm10WriteCharacteristicUuid, StringComparison.OrdinalIgnoreCase) && characteristic.CanWrite)
+                            if (
+                                characteristic
+                                    .Id.ToString()
+                                    .Equals(
+                                        Hm10WriteCharacteristicUuid,
+                                        StringComparison.OrdinalIgnoreCase
+                                    ) && characteristic.CanWrite
+                            )
                             {
                                 _writeCharacteristic = characteristic;
                                 Console.WriteLine("Writable HM-10 Characteristic Found");
                             }
 
                             // Look for the notification characteristic
-                            if (characteristic.Id.ToString().Equals(Hm10NotifyCharacteristicUuid, StringComparison.OrdinalIgnoreCase) && characteristic.CanUpdate)
+                            if (
+                                characteristic
+                                    .Id.ToString()
+                                    .Equals(
+                                        Hm10NotifyCharacteristicUuid,
+                                        StringComparison.OrdinalIgnoreCase
+                                    ) && characteristic.CanUpdate
+                            )
                             {
                                 _notifyCharacteristic = characteristic;
                                 Console.WriteLine("Notification HM-10 Characteristic Found");
 
                                 // Subscribe to notifications
                                 await _notifyCharacteristic.StartUpdatesAsync();
-                                _notifyCharacteristic.ValueUpdated += NotifyCharacteristic_ValueUpdated;
+                                _notifyCharacteristic.ValueUpdated +=
+                                    NotifyCharacteristic_ValueUpdated;
                             }
                         }
                     }
@@ -77,11 +96,18 @@ namespace TennisApp.Views
             }
             catch (Exception ex)
             {
-                await DisplayAlert("Error", $"Failed to discover services/characteristics: {ex.Message}", "OK");
+                await DisplayAlert(
+                    "Error",
+                    $"Failed to discover services/characteristics: {ex.Message}",
+                    "OK"
+                );
             }
         }
 
-        private void NotifyCharacteristic_ValueUpdated(object? sender, Plugin.BLE.Abstractions.EventArgs.CharacteristicUpdatedEventArgs e)
+        private void NotifyCharacteristic_ValueUpdated(
+            object? sender,
+            Plugin.BLE.Abstractions.EventArgs.CharacteristicUpdatedEventArgs e
+        )
         {
             // Decode the received data
             string receivedMessage = System.Text.Encoding.UTF8.GetString(e.Characteristic.Value);
@@ -109,6 +135,8 @@ namespace TennisApp.Views
                     // Convert the message to bytes and write to the characteristic
                     byte[] data = System.Text.Encoding.UTF8.GetBytes(message);
                     await _writeCharacteristic.WriteAsync(data);
+
+                    Console.WriteLine($"Sent message: {message}");
 
                     // Add the message to the messages list as a sent message
                     _messages.Add(new Message { Text = message, IsSent = true });

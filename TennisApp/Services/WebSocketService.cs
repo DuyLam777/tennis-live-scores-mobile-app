@@ -20,7 +20,12 @@ namespace TennisApp.Services
             if (_webSocket?.State == WebSocketState.Open)
             {
                 var buffer = Encoding.UTF8.GetBytes(message);
-                await _webSocket.SendAsync(buffer, WebSocketMessageType.Text, true, CancellationToken.None);
+                await _webSocket.SendAsync(
+                    buffer,
+                    WebSocketMessageType.Text,
+                    true,
+                    CancellationToken.None
+                );
             }
         }
 
@@ -39,7 +44,11 @@ namespace TennisApp.Services
         {
             if (_webSocket != null)
             {
-                await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", CancellationToken.None);
+                await _webSocket.CloseAsync(
+                    WebSocketCloseStatus.NormalClosure,
+                    "Closing",
+                    CancellationToken.None
+                );
                 _webSocket.Dispose();
             }
         }
