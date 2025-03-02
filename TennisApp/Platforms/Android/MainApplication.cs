@@ -54,7 +54,6 @@ public class MainApplication : MauiApplication
                     }
 
                     // Android 10+ specific styling
-                    // Inside your existing Android 10+ check block:
                     if (Build.VERSION.SdkInt >= BuildVersionCodes.Q)
                     {
 #pragma warning disable CA1416
