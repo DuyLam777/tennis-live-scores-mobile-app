@@ -1,47 +1,73 @@
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using Plugin.BLE;
 using Plugin.BLE.Abstractions.Contracts;
-using System.Collections.ObjectModel;
 
 namespace TennisApp.Views
 {
-    public partial class BluetoothConnectionPage : ContentPage
+    public partial class BluetoothConnectionPage : ContentPage, INotifyPropertyChanged
     {
         private IAdapter _adapter;
         private ObservableCollection<IDevice> _devices;
         private IDevice? _selectedDevice;
         private IDevice? _connectedDevice;
 
+        public IDevice? SelectedDevice
+        {
+            get => _selectedDevice;
+            set
+            {
+                _selectedDevice = value;
+                OnPropertyChanged();
+                btnConnect.IsEnabled = _selectedDevice != null;
+            }
+        }
+
         public BluetoothConnectionPage()
         {
+            PropertyChanged += (sender, e) => { };
             InitializeComponent();
+            BindingContext = this;
             _adapter = CrossBluetoothLE.Current.Adapter;
-            _devices = [];
-            // Bind the CollectionView to the list of devices found during scanning
+            _devices = new ObservableCollection<IDevice>();
             deviceList.ItemsSource = _devices;
+
+            btnConnect.IsEnabled = false;
+            btnDisconnect.IsEnabled = false;
         }
 
         private async Task<bool> EnsurePermissions()
         {
-            // Check and request ACCESS_FINE_LOCATION permission
-            var locationStatus = await Permissions.CheckStatusAsync<Permissions.LocationWhenInUse>();
+            // Location permission
+            var locationStatus =
+                await Permissions.CheckStatusAsync<Permissions.LocationWhenInUse>();
             if (locationStatus != PermissionStatus.Granted)
             {
                 locationStatus = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
                 if (locationStatus != PermissionStatus.Granted)
                 {
-                    await DisplayAlert("Permission Denied", "Location permission is required for Bluetooth scanning.", "OK");
+                    await DisplayAlert(
+                        "Permission Denied",
+                        "Location permission is required for Bluetooth scanning.",
+                        "OK"
+                    );
                     return false;
                 }
             }
 
-            // Check and request BLUETOOTH_SCAN and BLUETOOTH_CONNECT permissions (for Android 12+)
+            // Bluetooth permissions (Android 12+)
             var bluetoothStatus = await Permissions.CheckStatusAsync<Permissions.Bluetooth>();
             if (bluetoothStatus != PermissionStatus.Granted)
             {
                 bluetoothStatus = await Permissions.RequestAsync<Permissions.Bluetooth>();
                 if (bluetoothStatus != PermissionStatus.Granted)
                 {
-                    await DisplayAlert("Permission Denied", "Bluetooth permissions are required for Bluetooth scanning.", "OK");
+                    await DisplayAlert(
+                        "Permission Denied",
+                        "Bluetooth permissions are required for Bluetooth scanning.",
+                        "OK"
+                    );
                     return false;
                 }
             }
@@ -51,43 +77,51 @@ namespace TennisApp.Views
 
         private async void btnScan_Clicked(object sender, EventArgs e)
         {
-            // Ensure permissions are granted
             if (!await EnsurePermissions())
-            {
                 return;
-            }
 
             try
             {
-                // Ensure Bluetooth is enabled
+                btnScan.Text = "Scanning...";
+                btnScan.IsEnabled = false;
+
                 if (!CrossBluetoothLE.Current.IsOn)
                 {
                     await DisplayAlert("Error", "Bluetooth is not enabled.", "OK");
                     return;
                 }
 
-                // Clear the list of devices before scanning
                 _devices.Clear();
+                SelectedDevice = null;
 
-                // Start scanning for devices
                 _adapter.DeviceDiscovered += (s, a) =>
                 {
-                    // Add the full IDevice object to the collection
-                    if (!_devices.Contains(a.Device))
+                    MainThread.BeginInvokeOnMainThread(() =>
                     {
-                        // only show the device if it has a name
-                        if (!string.IsNullOrEmpty(a.Device.Name))
-                        {
+                        if (!_devices.Contains(a.Device) && !string.IsNullOrEmpty(a.Device.Name))
                             _devices.Add(a.Device);
-                        }
-                    }
+                    });
                 };
 
                 await _adapter.StartScanningForDevicesAsync();
+                await Task.Delay(10000);
+                await _adapter.StopScanningForDevicesAsync();
+
+                btnScan.Text = "Scan for Devices";
+                btnScan.IsEnabled = true;
+
+                if (_devices.Count == 0)
+                    await DisplayAlert(
+                        "No Devices",
+                        "No Bluetooth devices found. Ensure devices are powered on and in range.",
+                        "OK"
+                    );
             }
             catch (Exception ex)
             {
-                await DisplayAlert("Error", $"Failed to scan: {ex.Message}", "OK");
+                btnScan.Text = "Scan for Devices";
+                btnScan.IsEnabled = true;
+                await DisplayAlert("Error", $"Scan failed: {ex.Message}", "OK");
             }
         }
 
@@ -95,35 +129,37 @@ namespace TennisApp.Views
         {
             // Get the selected device from the CollectionView
             _selectedDevice = e.CurrentSelection.FirstOrDefault() as IDevice;
-
             // Enable or disable the Connect button based on whether a device is selected
             btnConnect.IsEnabled = _selectedDevice != null;
         }
 
         private async void btnConnect_Clicked(object sender, EventArgs e)
         {
-            if (_selectedDevice == null)
+            if (SelectedDevice == null)
             {
-                await DisplayAlert("Error", "No device selected.", "OK");
+                await DisplayAlert("Error", "No device selected", "OK");
                 return;
             }
+
             try
             {
-                // Connect to the selected device
-                await _adapter.ConnectToDeviceAsync(_selectedDevice);
-                _connectedDevice = _selectedDevice;
-
-                // Navigate to the BluetoothMessagePage and pass the connected device
-                var messagePage = new BluetoothMessagePage(_connectedDevice);
-                await Navigation.PushAsync(messagePage);
-
-                // Update UI
                 btnConnect.IsEnabled = false;
+                btnConnect.Text = "Connecting...";
+
+                await _adapter.ConnectToDeviceAsync(SelectedDevice);
+                _connectedDevice = SelectedDevice;
+
+                await Navigation.PushAsync(new BluetoothMessagePage(_connectedDevice));
+
+                btnConnect.Text = "Connect";
+                btnConnect.IsEnabled = true;
                 btnDisconnect.IsEnabled = true;
             }
             catch (Exception ex)
             {
-                await DisplayAlert("Error", $"Failed to connect: {ex.Message}", "OK");
+                btnConnect.Text = "Connect";
+                btnConnect.IsEnabled = true;
+                await DisplayAlert("Error", $"Connection failed: {ex.Message}", "OK");
             }
         }
 
@@ -131,25 +167,44 @@ namespace TennisApp.Views
         {
             if (_connectedDevice == null)
             {
-                await DisplayAlert("Info", "No device is currently connected.", "OK");
+                await DisplayAlert("Info", "No connected device", "OK");
                 return;
             }
 
             try
             {
-                // Disconnect from the connected device
+                btnDisconnect.IsEnabled = false;
+                btnDisconnect.Text = "Disconnecting...";
+
                 await _adapter.DisconnectDeviceAsync(_connectedDevice);
                 _connectedDevice = null;
 
-                // Update UI
                 btnConnect.IsEnabled = true;
                 btnDisconnect.IsEnabled = false;
-                await DisplayAlert("Success", "Disconnected from device.", "OK");
+                btnDisconnect.Text = "Disconnect";
+
+                await DisplayAlert("Success", "Disconnected successfully", "OK");
             }
             catch (Exception ex)
             {
-                await DisplayAlert("Error", $"Failed to disconnect: {ex.Message}", "OK");
+                btnDisconnect.Text = "Disconnect";
+                btnDisconnect.IsEnabled = true;
+                await DisplayAlert("Error", $"Disconnection failed: {ex.Message}", "OK");
             }
+        }
+
+        protected override void OnAppearing()
+        {
+            base.OnAppearing();
+            btnDisconnect.IsEnabled = _connectedDevice != null;
+        }
+
+        public new event PropertyChangedEventHandler? PropertyChanged;
+
+        protected override void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            base.OnPropertyChanged(propertyName);
         }
     }
 }

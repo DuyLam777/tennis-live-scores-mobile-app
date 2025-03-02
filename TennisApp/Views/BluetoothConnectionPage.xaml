@@ -1,31 +1,113 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="TennisApp.Views.BluetoothConnectionPage"
-             Title="Bluetooth Connection">
-    <VerticalStackLayout>
+<ContentPage
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Class="TennisApp.Views.BluetoothConnectionPage"
+    Title="Bluetooth Connection"
+    BackgroundColor="{StaticResource Background}">
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto"
+            Padding="20">
+        <!-- Title -->
         <Label
-            Text="Bluetooth Connection"
-            VerticalOptions="Center"
-            HorizontalOptions="Center" />
-        
-        <!-- Button to start scanning -->
-        <Button x:Name="btnScan" Clicked="btnScan_Clicked" Text="Scan for Devices" />
-        
-        <!-- List of discovered devices -->
-        <CollectionView x:Name="deviceList" SelectionMode="Single" SelectionChanged="DeviceList_SelectionChanged">
+            Grid.Row="0"
+            Text="Bluetooth Devices"
+            Style="{StaticResource Headline}"
+            HorizontalOptions="Center"
+            Margin="0,0,0,20"/>
+
+        <!-- Scan Button -->
+        <Button
+            Grid.Row="1"
+            x:Name="btnScan"
+            Text="Scan for Devices"
+            Style="{StaticResource PrimaryButton}"
+            Clicked="btnScan_Clicked"
+            Margin="0,0,0,20"/>
+
+        <!-- Device List (Scrollable) -->
+        <CollectionView
+            Grid.Row="2"
+            x:Name="deviceList"
+            SelectionMode="Single"
+            SelectionChanged="DeviceList_SelectionChanged"
+            Margin="0,0,0,20">
             <CollectionView.ItemTemplate>
                 <DataTemplate>
-                    <HorizontalStackLayout Padding="10">
-                        <Label Text="{Binding Name}" FontSize="Medium" VerticalOptions="Center" />
-                        <Label Text="{Binding Id}" FontSize="Small" VerticalOptions="Center" Margin="10,0,0,0" />
-                    </HorizontalStackLayout>
+                    <!-- Border adds rounded corners -->
+                    <Border
+                        Margin="0,5"
+                        StrokeShape="RoundRectangle 20,20,20,20"
+                        BackgroundColor="{StaticResource Surface}">
+
+                        <!-- Selection state management -->
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup Name="CommonStates">
+                                <VisualState Name="Normal">
+                                    <VisualState.Setters>
+                                        <Setter Property="BackgroundColor"
+                                                Value="{StaticResource Surface}"/>
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState Name="Selected">
+                                    <VisualState.Setters>
+                                        <Setter Property="BackgroundColor"
+                                                Value="{StaticResource Primary}"/>
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+
+                        <!-- Content layout -->
+                        <Grid Padding="10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Bluetooth Icon -->
+                            <Image
+                                Source="bluetooth_icon.png"
+                                WidthRequest="24"
+                                HeightRequest="24"
+                                VerticalOptions="Center"/>
+
+                            <!-- Device Info -->
+                            <VerticalStackLayout Grid.Column="1"
+                                    Margin="12,0,0,0">
+                                <Label
+                                    Text="{Binding Name}"
+                                    FontSize="16"
+                                    TextColor="White"/>
+                                <Label
+                                    Text="{Binding Id}"
+                                    FontSize="14"
+                                    TextColor="{StaticResource Gray300}"/>
+                            </VerticalStackLayout>
+                        </Grid>
+                    </Border>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
-        
-        <!-- Buttons for connection actions -->
-        <Button x:Name="btnConnect" Clicked="btnConnect_Clicked" Text="Connect" IsEnabled="False" />
-        <Button x:Name="btnDisconnect" Clicked="btnDisconnect_Clicked" Text="Disconnect" IsEnabled="False" />
-    </VerticalStackLayout>
+
+        <!-- Action Buttons -->
+        <Grid
+            Grid.Row="3"
+            ColumnDefinitions="*,*"
+            ColumnSpacing="10">
+            <Button
+                x:Name="btnConnect"
+                Text="Connect"
+                Style="{StaticResource PrimaryButton}"
+                IsEnabled="False"
+                Clicked="btnConnect_Clicked"/>
+            <Button
+                x:Name="btnDisconnect"
+                Text="Disconnect"
+                Style="{StaticResource SecondaryButton}"
+                IsEnabled="False"
+                Clicked="btnDisconnect_Clicked"
+                Grid.Column="1"/>
+        </Grid>
+    </Grid>
 </ContentPage>

@@ -1,26 +1,44 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="TennisApp.Views.BluetoothMessagePage"
-             Title="Bluetooth Messages">
-    <StackLayout>
+<ContentPage 
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Class="TennisApp.Views.BluetoothMessagePage"
+    Title="Bluetooth Messages"
+    BackgroundColor="{StaticResource Background}">
+
+    <StackLayout Padding="20">
         <!-- ListView to display messages -->
-        <ListView x:Name="messagesList"
-                HasUnevenRows="True">
-            <ListView.ItemTemplate>
+        <CollectionView 
+            x:Name="messagesList"
+            BackgroundColor="{StaticResource Surface}">
+            <CollectionView.ItemTemplate>
                 <DataTemplate>
-                    <ViewCell>
-                        <Label Text="{Binding Text}"
-                                TextColor="{Binding IsSent, Converter={StaticResource BooleanToColorConverter}}" />
-                    </ViewCell>
+                    <Frame 
+                        BackgroundColor="{StaticResource Surface}"
+                        CornerRadius="8"
+                        Padding="10"
+                        Margin="0,4">
+                        <Label 
+                            Text="{Binding Text}"
+                            TextColor="{Binding IsSent, Converter={StaticResource BooleanToColorConverter}}"
+                            FontSize="16"/>
+                    </Frame>
                 </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
 
         <!-- Input field and send button -->
-        <Entry x:Name="messageInput"
-                Placeholder="Enter message"/>
-        <Button Text="Send"
-                Clicked="btnSendMessage_Clicked"/>
+        <Entry 
+            x:Name="messageInput"
+            Placeholder="Enter message"
+            BackgroundColor="{StaticResource Surface}"
+            TextColor="White"
+            PlaceholderColor="{StaticResource Gray500}"
+            Margin="0,10"/>
+
+        <Button 
+            Text="Send"
+            Style="{StaticResource PrimaryButton}"
+            Clicked="btnSendMessage_Clicked"/>
     </StackLayout>
 </ContentPage>

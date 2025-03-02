@@ -20,10 +20,11 @@ public partial class WebSocketPage : ContentPage
 	{
 		try
 		{
+			Console.WriteLine("Connecting to WebSocket server...");
 			_viewModel.ConnectionStatus = "Connecting...";
 			_viewModel.ButtonColor = Colors.Orange; // Indicate connecting state
 
-			await _webSocketService.ConnectAsync("ws://10.0.2.2:5020/ws");
+			await _webSocketService.ConnectAsync("ws://192.168.0.174:5020/ws");
 			_viewModel.SetConnectedState(); // Update the view model for connected state
 		}
 		catch (Exception ex)

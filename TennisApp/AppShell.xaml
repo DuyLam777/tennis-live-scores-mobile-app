@@ -5,22 +5,23 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:views="clr-namespace:TennisApp.Views"
     xmlns:root="clr-namespace:TennisApp"
-    Shell.FlyoutBehavior="Flyout">
+    Shell.FlyoutBehavior="Flyout"
+    BackgroundColor="{StaticResource Background}">
 
     <!-- Flyout Menu Items -->
-    <FlyoutItem Title="Home" Icon="home.png">
+    <FlyoutItem Title="Home" Icon="Resources/Images/home_button.svg">
         <ShellContent ContentTemplate="{DataTemplate root:MainPage}" />
     </FlyoutItem>
 
-    <FlyoutItem Title="Bluetooth" Icon="bluetooth.png">
+    <FlyoutItem Title="Bluetooth" Icon="Resources/Images/bluetooth_icon.svg">
         <ShellContent ContentTemplate="{DataTemplate views:BluetoothConnectionPage}" />
     </FlyoutItem>
 
-    <FlyoutItem Title="WebSocket" Icon="network.png">
+    <FlyoutItem Title="WebSocket" Icon="Resources/Images/websocket_icon.svg">
         <ShellContent ContentTemplate="{DataTemplate views:WebSocketPage}" />
     </FlyoutItem>
 
-    <!-- Existing pages -->
+    <!-- Existing Pages -->
     <ShellContent
         Route="BluetoothConnectionPage"
         ContentTemplate="{DataTemplate views:BluetoothConnectionPage}"
@@ -30,5 +31,4 @@
         Route="WebSocketPage"
         ContentTemplate="{DataTemplate views:WebSocketPage}"
         FlyoutItemIsVisible="False" />
-
 </Shell>
