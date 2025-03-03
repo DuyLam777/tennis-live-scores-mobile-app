@@ -10,26 +10,19 @@
     FlyoutBackground="{StaticResource Background}">
 
     <!-- Flyout Menu Items -->
-    <FlyoutItem Title="Home" Icon="Resources/Images/home_button.svg">
+    <FlyoutItem Title="Home" Icon="home_button.svg">
         <ShellContent ContentTemplate="{DataTemplate root:MainPage}" />
     </FlyoutItem>
 
-    <FlyoutItem Title="Bluetooth" Icon="Resources/Images/bluetooth_icon.svg">
+    <FlyoutItem Title="Bluetooth" Icon="bluetooth_icon.svg">
         <ShellContent ContentTemplate="{DataTemplate views:BluetoothConnectionPage}" />
     </FlyoutItem>
 
-    <FlyoutItem Title="WebSocket" Icon="Resources/Images/websocket_icon.svg">
+    <FlyoutItem Title="WebSocket" Icon="websocket_icon.svg">
         <ShellContent ContentTemplate="{DataTemplate views:WebSocketPage}" />
     </FlyoutItem>
 
-    <!-- Existing Pages -->
-    <ShellContent
-        Route="BluetoothConnectionPage"
-        ContentTemplate="{DataTemplate views:BluetoothConnectionPage}"
-        FlyoutItemIsVisible="False" />
-
-    <ShellContent
-        Route="WebSocketPage"
-        ContentTemplate="{DataTemplate views:WebSocketPage}"
-        FlyoutItemIsVisible="False" />
+    <FlyoutItem Title="Create Match" Icon="create_new_match.svg">
+        <ShellContent ContentTemplate="{DataTemplate views:CreateNewMatchPage}" />
+    </FlyoutItem>
 </Shell>

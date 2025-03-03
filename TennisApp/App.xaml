@@ -11,6 +11,23 @@
                 <ResourceDictionary Source="Resources/Styles/Colors.xaml"/>
                 <ResourceDictionary Source="Resources/Styles/Styles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
+            <Style x:Key="FormEntry" TargetType="Entry">
+                <Setter Property="BackgroundColor" Value="{StaticResource Surface}"/>
+                <Setter Property="TextColor" Value="{StaticResource White}"/>
+                <Setter Property="PlaceholderColor" Value="{StaticResource Gray500}"/>
+                <Setter Property="Margin" Value="0,5"/>
+            </Style>
+            <Style x:Key="FormDatePicker" TargetType="DatePicker">
+                <Setter Property="BackgroundColor" Value="{StaticResource Surface}"/>
+                <Setter Property="TextColor" Value="{StaticResource White}"/>
+                <Setter Property="Margin" Value="0,5"/>
+            </Style>
+
+            <Style x:Key="SectionHeader" TargetType="Label">
+                <Setter Property="FontSize" Value="18"/>
+                <Setter Property="TextColor" Value="{StaticResource White}"/>
+                <Setter Property="Margin" Value="0,15,0,5"/>
+            </Style>
             <converters:BooleanToColorConverter x:Key="BooleanToColorConverter"/>
             <converters:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
             <converters:BooleanToLayoutOptionsConverter x:Key="BooleanToLayoutOptionsConverter"/>

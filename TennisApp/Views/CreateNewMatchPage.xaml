@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewModels="clr-namespace:TennisApp.ViewModels"
+             x:Class="TennisApp.Views.CreateNewMatchPage"
+             Title="Create Match"
+             BackgroundColor="{StaticResource Background}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20">
+            <!-- Match Name -->
+            <Entry
+                Placeholder="Match Name"
+                Text="{Binding MatchName}"
+                Style="{StaticResource FormEntry}"
+                Margin="0,0,0,10"/>
+
+            <!-- Date Picker -->
+            <DatePicker
+                Date="{Binding MatchDate}"
+                Format="D"
+                Style="{StaticResource FormDatePicker}"
+                Margin="0,0,0,10"/>
+
+            <!-- Location -->
+            <Entry
+                Placeholder="Location"
+                Text="{Binding Location}"
+                Style="{StaticResource FormEntry}"
+                Margin="0,0,0,20"/>
+
+            <!-- Player Selection -->
+            <Label Text="Select Players"
+                    Style="{StaticResource SectionHeader}"/>
+            <CollectionView
+                ItemsSource="{Binding AvailablePlayers}"
+                SelectionMode="None"
+                Margin="0,0,0,20">
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Padding="10"
+                                ColumnDefinitions="*,Auto">
+                            <Label
+                                Text="{Binding Name}"
+                                VerticalOptions="Center"/>
+
+                            <CheckBox
+                                IsChecked="{Binding IsSelected}"
+                                Grid.Column="1"
+                                Color="{StaticResource Primary}"/>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <!-- Error Message -->
+            <Label
+                Text="{Binding ErrorMessage}"
+                TextColor="{StaticResource Error}"
+                IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToVisibilityConverter}}"
+                Margin="0,0,0,20"/>
+
+            <!-- Submit Button -->
+            <Button
+                Text="Create Match"
+                Style="{StaticResource PrimaryButton}"
+                Command="{Binding CreateMatchCommand}"/>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
