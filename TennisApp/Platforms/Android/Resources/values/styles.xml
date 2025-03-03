@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <style name="MainTheme" parent="MainTheme.Base">
+        <item name="android:datePickerDialogTheme">@style/CustomDatePickerDialog</item>
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="CustomDatePickerDialog" parent="Theme.MaterialComponents.DayNight.Dialog">
+        <!-- Header -->
+        <item name="colorPrimary">@color/Primary</item> <!-- OK button background -->
+        <item name="colorSecondary">@color/Secondary</item> <!-- Cancel button background -->
+        <!-- Text Colors -->
+        <item name="android:textColorPrimary">@color/White</item> <!-- Header text -->
+        <item name="android:textColorSecondary">@color/White</item> <!-- Button text -->
+        <item name="android:textColorTertiary">@color/Primary</item> <!-- Weekday text -->
+        <!-- Background -->
+        <item name="android:windowBackground">@color/Surface</item>
+        <item name="android:colorBackground">@color/Surface</item>
+        <!-- Selection -->
+        <item name="android:colorControlActivated">@color/Primary</item>
+        <item name="colorAccent">@color/Primary</item>
+        <!-- Button Style -->
+        <item name="buttonBarButtonStyle">@style/CustomDialogButton</item>
+        <item name="materialButtonStyle">@style/CustomDialogButton</item> <!-- Added -->
+    </style>
+
+    <!-- Custom Button Style -->
+    <style name="CustomDialogButton" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+        <item name="android:textColor">@color/White</item> <!-- White text -->
+        <item name="backgroundTint">@color/Surface</item> <!-- Surface background -->
+        <item name="cornerRadius">8dp</item> <!-- Optional rounded corners -->
+    </style>
+</resources>
