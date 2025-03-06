@@ -9,6 +9,7 @@
     <Color x:Key="Tertiary">#74c7ec</Color>
     <Color x:Key="Success">#a6e3a1</Color>
     <Color x:Key="Danger">#f38ba8</Color>
+    <Color x:Key="Error">#f38ba8</Color>
 
     <!-- Background & Surface Colors -->
     <Color x:Key="Background">#181825</Color>

@@ -24,18 +24,40 @@ public partial class CreateMatchViewModel : ObservableObject
     [ObservableProperty]
     private string errorMessage = string.Empty;
 
+    [ObservableProperty]
+    private bool isLoading = false;
+
     public CreateMatchViewModel(HttpClient httpClient)
     {
         _httpClient = httpClient;
-        LoadPlayers();
     }
 
+    [RelayCommand]
     private void LoadPlayers()
     {
-        // Here we will call the actual API to get the list of players
-        AvailablePlayers.Add(new Player { Id = 1, Name = "Player 1" });
-        AvailablePlayers.Add(new Player { Id = 2, Name = "Player 2" });
-        AvailablePlayers.Add(new Player { Id = 3, Name = "Player 3" });
+        try
+        {
+            IsLoading = true;
+
+            // Clear existing players
+            AvailablePlayers.Clear();
+
+            // Here we will call the actual API to get the list of players
+            // For now, using mock data
+            AvailablePlayers.Add(new Player { Id = 1, Name = "Player 1" });
+            AvailablePlayers.Add(new Player { Id = 2, Name = "Player 2" });
+            AvailablePlayers.Add(new Player { Id = 3, Name = "Player 3" });
+
+            ErrorMessage = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error loading players: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
     }
 
     [RelayCommand]
@@ -53,6 +75,8 @@ public partial class CreateMatchViewModel : ObservableObject
 
         try
         {
+            IsLoading = true;
+
             var match = new
             {
                 Name = MatchName,
@@ -70,6 +94,10 @@ public partial class CreateMatchViewModel : ObservableObject
         catch (Exception ex)
         {
             ErrorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
         }
     }
 }

@@ -7,22 +7,39 @@
     xmlns:root="clr-namespace:TennisApp"
     Shell.FlyoutBehavior="Flyout"
     BackgroundColor="{StaticResource Background}"
-    FlyoutBackground="{StaticResource Background}">
+    FlyoutBackgroundColor="{StaticResource Background}">
+
+    <!-- Define a FlyoutHeader -->
+    <Shell.FlyoutHeader>
+        <Grid HeightRequest="100"
+                BackgroundColor="{StaticResource Surface}">
+            <Label Text="Tennis App"
+                   FontSize="24"
+                   TextColor="{StaticResource White}"
+                   HorizontalOptions="Center"
+                   VerticalOptions="Center"/>
+        </Grid>
+    </Shell.FlyoutHeader>
 
     <!-- Flyout Menu Items -->
-    <FlyoutItem Title="Home" Icon="home_button.svg">
-        <ShellContent ContentTemplate="{DataTemplate root:MainPage}" />
-    </FlyoutItem>
+    <ShellContent Title="Home"
+            Icon="home_button.svg"
+            ContentTemplate="{DataTemplate root:MainPage}"
+            Route="MainPage"/>
 
-    <FlyoutItem Title="Bluetooth" Icon="bluetooth_icon.svg">
-        <ShellContent ContentTemplate="{DataTemplate views:BluetoothConnectionPage}" />
-    </FlyoutItem>
+    <ShellContent Title="Bluetooth"
+            Icon="bluetooth_icon.svg"
+            ContentTemplate="{DataTemplate views:BluetoothConnectionPage}"
+            Route="Bluetooth"/>
 
-    <FlyoutItem Title="WebSocket" Icon="websocket_icon.svg">
-        <ShellContent ContentTemplate="{DataTemplate views:WebSocketPage}" />
-    </FlyoutItem>
+    <ShellContent Title="WebSocket"
+            Icon="websocket_icon.svg"
+            ContentTemplate="{DataTemplate views:WebSocketPage}"
+            Route="WebSocket"/>
 
-    <FlyoutItem Title="Create Match" Icon="create_new_match.svg">
-        <ShellContent ContentTemplate="{DataTemplate views:CreateNewMatchPage}" />
-    </FlyoutItem>
+    <ShellContent Title="Create Match"
+            Icon="create_new_match.svg"
+            ContentTemplate="{DataTemplate views:CreateNewMatchPage}"
+            Route="CreateMatch"/>
+
 </Shell>
