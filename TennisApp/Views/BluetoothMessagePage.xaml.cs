@@ -1,16 +1,22 @@
+using System;
 using System.Collections.ObjectModel;
+using System.Text;
+using Microsoft.Maui.Dispatching;
 using Plugin.BLE.Abstractions.Contracts;
+using TennisApp.Services;
 
 namespace TennisApp.Views
 {
     public partial class BluetoothMessagePage : ContentPage
     {
         private IDevice _connectedDevice;
-        private ObservableCollection<Message> _messages; // Stores both sent and received messages
+        private ObservableCollection<Message> _messages;
         private ICharacteristic? _writeCharacteristic;
         private ICharacteristic? _notifyCharacteristic;
+        private readonly WebSocketService _webSocketService;
+        private bool _isWebSocketConnected = false;
 
-        // Custom service and characteristic UUIDs for the HM-10 module
+        // HM-10 service and characteristic UUIDs
         private static readonly string Hm10ServiceUuid = "0000FFE0-0000-1000-8000-00805F9B34FB";
         private static readonly string Hm10WriteCharacteristicUuid = "0000FFE1-0000-1000-8000-00805F9B34FB";
         private static readonly string Hm10NotifyCharacteristicUuid = "0000FFE1-0000-1000-8000-00805F9B34FB";
@@ -19,10 +25,13 @@ namespace TennisApp.Views
         {
             InitializeComponent();
             _connectedDevice = connectedDevice;
-            _messages = [];
-            // Bind the ListView to the list of messages
+            _messages = new ObservableCollection<Message>();
             messagesList.ItemsSource = _messages;
-            // Discover services and characteristics
+
+            // Initialize WebSocket service
+            _webSocketService = new WebSocketService();
+
+            // Begin discovering the Bluetooth services and characteristics
             DiscoverServicesAndCharacteristicsAsync();
         }
 
@@ -30,63 +39,37 @@ namespace TennisApp.Views
         {
             try
             {
-                // Get all services from the connected device
                 var services = await _connectedDevice.GetServicesAsync();
                 foreach (var service in services)
                 {
-                    // Check if the service matches the HM-10 service UUID
-                    if (
-                        service
-                            .Id.ToString()
-                            .Equals(Hm10ServiceUuid, StringComparison.OrdinalIgnoreCase)
-                    )
+                    if (service.Id.ToString().Equals(Hm10ServiceUuid, StringComparison.OrdinalIgnoreCase))
                     {
                         Console.WriteLine("HM-10 Service Found");
-
-                        // Get all characteristics for the HM-10 service
                         var characteristics = await service.GetCharacteristicsAsync();
                         foreach (var characteristic in characteristics)
                         {
-                            // Look for the writable characteristic
-                            if (
-                                characteristic
-                                    .Id.ToString()
-                                    .Equals(
-                                        Hm10WriteCharacteristicUuid,
-                                        StringComparison.OrdinalIgnoreCase
-                                    ) && characteristic.CanWrite
-                            )
+                            // Find the write characteristic
+                            if (characteristic.Id.ToString().Equals(Hm10WriteCharacteristicUuid, StringComparison.OrdinalIgnoreCase) && characteristic.CanWrite)
                             {
                                 _writeCharacteristic = characteristic;
                                 Console.WriteLine("Writable HM-10 Characteristic Found");
                             }
 
-                            // Look for the notification characteristic
-                            if (
-                                characteristic
-                                    .Id.ToString()
-                                    .Equals(
-                                        Hm10NotifyCharacteristicUuid,
-                                        StringComparison.OrdinalIgnoreCase
-                                    ) && characteristic.CanUpdate
-                            )
+                            // Find the notify characteristic
+                            if (characteristic.Id.ToString().Equals(Hm10NotifyCharacteristicUuid, StringComparison.OrdinalIgnoreCase) && characteristic.CanUpdate)
                             {
                                 _notifyCharacteristic = characteristic;
                                 Console.WriteLine("Notification HM-10 Characteristic Found");
 
                                 // Subscribe to notifications
                                 await _notifyCharacteristic.StartUpdatesAsync();
-                                _notifyCharacteristic.ValueUpdated +=
-                                    NotifyCharacteristic_ValueUpdated;
+                                _notifyCharacteristic.ValueUpdated += NotifyCharacteristic_ValueUpdated;
                             }
                         }
                     }
-
+                    // Exit early if both characteristics are found
                     if (_writeCharacteristic != null && _notifyCharacteristic != null)
-                    {
-                        // Stop searching as we found both characteristics
                         break;
-                    }
                 }
 
                 if (_writeCharacteristic == null || _notifyCharacteristic == null)
@@ -96,26 +79,24 @@ namespace TennisApp.Views
             }
             catch (Exception ex)
             {
-                await DisplayAlert(
-                    "Error",
-                    $"Failed to discover services/characteristics: {ex.Message}",
-                    "OK"
-                );
+                await DisplayAlert("Error", $"Failed to discover services/characteristics: {ex.Message}", "OK");
             }
         }
 
-        private void NotifyCharacteristic_ValueUpdated(
-            object? sender,
-            Plugin.BLE.Abstractions.EventArgs.CharacteristicUpdatedEventArgs e
-        )
+        private void NotifyCharacteristic_ValueUpdated(object? sender, Plugin.BLE.Abstractions.EventArgs.CharacteristicUpdatedEventArgs e)
         {
-            // Decode the received data
-            string receivedMessage = System.Text.Encoding.UTF8.GetString(e.Characteristic.Value);
+            // Decode the received Bluetooth data
+            string receivedMessage = Encoding.UTF8.GetString(e.Characteristic.Value);
 
-            // Add the message to the messages list as a received message
-            MainThread.BeginInvokeOnMainThread(() =>
+            // Update the UI on the main thread
+            MainThread.BeginInvokeOnMainThread(async () =>
             {
                 _messages.Add(new Message { Text = receivedMessage, IsSent = false });
+                // If the message starts with "Set", forward it to the WebSocket (if connected)
+                if (_isWebSocketConnected && receivedMessage.StartsWith("Set", StringComparison.OrdinalIgnoreCase))
+                {
+                    await _webSocketService.SendAsync(receivedMessage);
+                }
             });
         }
 
@@ -132,16 +113,17 @@ namespace TennisApp.Views
             {
                 if (_writeCharacteristic != null && _writeCharacteristic.CanWrite)
                 {
-                    // Convert the message to bytes and write to the characteristic
-                    byte[] data = System.Text.Encoding.UTF8.GetBytes(message);
+                    // Convert message to bytes and send via Bluetooth
+                    byte[] data = Encoding.UTF8.GetBytes(message);
                     await _writeCharacteristic.WriteAsync(data);
-
-                    Console.WriteLine($"Sent message: {message}");
-
-                    // Add the message to the messages list as a sent message
                     _messages.Add(new Message { Text = message, IsSent = true });
 
-                    // Clear the input field
+                    // Also send the message to the WebSocket if connected
+                    if (_isWebSocketConnected)
+                    {
+                        await _webSocketService.SendAsync(message);
+                    }
+
                     messageInput.Text = string.Empty;
                 }
                 else
@@ -154,11 +136,29 @@ namespace TennisApp.Views
                 await DisplayAlert("Error", $"Failed to send message: {ex.Message}", "OK");
             }
         }
+
+        private async void btnConnectWebSocket_Clicked(object sender, EventArgs e)
+        {
+            // Update button text to show connecting state
+            btnConnectWebSocket.Text = "Connecting...";
+            try
+            {
+                await _webSocketService.ConnectAsync("ws://192.168.0.174:5020/ws");
+                _isWebSocketConnected = true;
+                btnConnectWebSocket.Text = "Connected";
+                await DisplayAlert("Success", "Connected to WebSocket!", "OK");
+            }
+            catch (Exception ex)
+            {
+                btnConnectWebSocket.Text = "Connect WebSocket";
+                await DisplayAlert("Error", $"Failed to connect: {ex.Message}", "OK");
+            }
+        }
     }
 
     public class Message
     {
         public string? Text { get; set; }
-        public bool IsSent { get; set; } // True for sent messages, False for received messages
+        public bool IsSent { get; set; } // True if sent from this device, False if received via Bluetooth
     }
 }

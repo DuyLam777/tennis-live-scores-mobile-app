@@ -6,18 +6,24 @@
     Title="Bluetooth Messages"
     BackgroundColor="{StaticResource Background}">
 
-    <Grid
-        RowDefinitions="*,Auto"
-        Padding="20"
-        RowSpacing="10">
+    <!-- Grid with three rows:
+         Row 0: WebSocket Connect Button
+         Row 1: CollectionView for messages
+         Row 2: Input area for sending messages -->
+    <Grid RowDefinitions="Auto,*,Auto" Padding="20" RowSpacing="10">
+        <!-- WebSocket Connection Button -->
+        <Button
+            x:Name="btnConnectWebSocket"
+            Text="Connect WebSocket"
+            Style="{StaticResource PrimaryButton}"
+            Clicked="btnConnectWebSocket_Clicked"/>
 
         <!-- Message List -->
         <CollectionView
-            Grid.Row="0"
+            Grid.Row="1"
             x:Name="messagesList"
             BackgroundColor="{StaticResource Background}"
             Margin="0,0,0,10">
-
             <CollectionView.ItemTemplate>
                 <DataTemplate>
                     <Frame
@@ -26,7 +32,6 @@
                         Padding="12"
                         BackgroundColor="{StaticResource Surface}"
                         HorizontalOptions="{Binding IsSent, Converter={StaticResource BooleanToLayoutOptionsConverter}}">
-
                         <Label
                             Text="{Binding Text}"
                             TextColor="{Binding IsSent, Converter={StaticResource BooleanToColorConverter}}"
@@ -42,10 +47,9 @@
 
         <!-- Input Area -->
         <Grid
-            Grid.Row="1"
+            Grid.Row="2"
             ColumnDefinitions="*,Auto"
             ColumnSpacing="10">
-
             <Entry
                 x:Name="messageInput"
                 Placeholder="Enter message"
@@ -54,7 +58,6 @@
                 PlaceholderColor="{StaticResource Gray500}"
                 Margin="0,0,0,5"
                 ClearButtonVisibility="WhileEditing"/>
-
             <Button
                 Text="Send"
                 Style="{StaticResource PrimaryButton}"
