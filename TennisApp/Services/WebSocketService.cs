@@ -22,14 +22,12 @@ namespace TennisApp.Services
                 {
                     await CloseAsync();
                 }
-
                 // Reset WebSocket if it was previously used
                 if (_webSocket.State != WebSocketState.None)
                 {
                     _webSocket = new ClientWebSocket();
                     _cancellationTokenSource = new CancellationTokenSource();
                 }
-
                 await _webSocket.ConnectAsync(new Uri(url), _cancellationTokenSource.Token);
             }
             catch (Exception ex)
@@ -45,7 +43,6 @@ namespace TennisApp.Services
             {
                 throw new InvalidOperationException("WebSocket is not connected");
             }
-
             var buffer = Encoding.UTF8.GetBytes(message);
             await _webSocket.SendAsync(
                 new ArraySegment<byte>(buffer),
@@ -61,13 +58,11 @@ namespace TennisApp.Services
             {
                 throw new InvalidOperationException("WebSocket is not connected");
             }
-
             var buffer = new byte[1024];
             var result = await _webSocket.ReceiveAsync(
                 new ArraySegment<byte>(buffer),
                 _cancellationTokenSource.Token
             );
-
             if (result.MessageType == WebSocketMessageType.Close)
             {
                 await _webSocket.CloseAsync(
@@ -75,10 +70,8 @@ namespace TennisApp.Services
                     "Closed by the client",
                     CancellationToken.None
                 );
-
                 return "Connection closed";
             }
-
             return Encoding.UTF8.GetString(buffer, 0, result.Count);
         }
 
@@ -88,10 +81,12 @@ namespace TennisApp.Services
             {
                 if (_webSocket.State == WebSocketState.Open)
                 {
+                    // Use a shorter timeout for closing to prevent UI hangs
+                    var closeToken = new CancellationTokenSource(5000).Token;
                     await _webSocket.CloseAsync(
                         WebSocketCloseStatus.NormalClosure,
                         "Closed by the client",
-                        CancellationToken.None
+                        closeToken
                     );
                 }
             }
@@ -102,6 +97,8 @@ namespace TennisApp.Services
             finally
             {
                 _cancellationTokenSource.Cancel();
+                // Dispose of the WebSocket
+                _webSocket.Dispose();
             }
         }
 

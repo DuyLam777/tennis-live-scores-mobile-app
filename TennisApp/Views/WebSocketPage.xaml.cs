@@ -66,13 +66,17 @@ public partial class WebSocketPage : ContentPage
         }
     }
 
-    protected override void OnDisappearing()
+    protected override async void OnDisappearing()
     {
         base.OnDisappearing();
         try
         {
-            _webSocketService.CloseAsync().Wait();
-            _viewModel.SetDisconnectedState(); // Reset the view model when leaving the page
+            // Check if the service exists before trying to close it
+            if (_webSocketService != null)
+            {
+                await _webSocketService.CloseAsync();
+                _viewModel.SetDisconnectedState(); // Reset the view model when leaving the page
+            }
         }
         catch (Exception ex)
         {
