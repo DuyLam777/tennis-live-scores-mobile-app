@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using TennisApp.Services;
 using TennisApp.ViewModels;
 using TennisApp.Views;
 
@@ -17,10 +18,32 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
 
-        // Register Services for API call to web app
-        builder.Services.AddHttpClient();
+        // Configure HttpClient
+        builder.Services.AddHttpClient(
+            "WebApp",
+            httpClient =>
+            {
+                httpClient.BaseAddress = new Uri("https://localhost:5020");
+            }
+        );
+
+        // Register HttpClient factory
+        builder.Services.AddTransient<HttpClient>(provider =>
+            provider.GetRequiredService<IHttpClientFactory>().CreateClient("WebApp")
+        );
+
+        // Register Services
+        builder.Services.AddSingleton<WebSocketService>();
+
+        // Register ViewModels
         builder.Services.AddTransient<CreateMatchViewModel>();
+
+        // Register Pages
+        builder.Services.AddTransient<MainPage>();
+        builder.Services.AddTransient<BluetoothConnectionPage>();
+        builder.Services.AddTransient<WebSocketPage>();
         builder.Services.AddTransient<CreateNewMatchPage>();
+
 #if DEBUG
         builder.Logging.AddDebug();
 #endif

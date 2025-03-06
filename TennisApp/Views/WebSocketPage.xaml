@@ -1,45 +1,62 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage 
-    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:viewmodels="clr-namespace:TennisApp.ViewModels"
-    x:Class="TennisApp.Views.WebSocketPage"
-    Title="WebSocket Test"
-    BackgroundColor="{StaticResource Background}">
-    
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:TennisApp.ViewModels"
+             x:Class="TennisApp.Views.WebSocketPage"
+             Title="WebSocket Connection"
+             BackgroundColor="{StaticResource Background}">
+
     <ContentPage.BindingContext>
-        <viewmodels:WebSocketViewModel />
+        <vm:WebSocketViewModel/>
     </ContentPage.BindingContext>
 
-    <VerticalStackLayout Padding="20">
-        <!-- Connect Button -->
-        <Button
-            Text="{Binding ConnectionStatus}"
-            Clicked="ConnectButton_Clicked"
-            Style="{StaticResource PrimaryButton}"
-            IsEnabled="{Binding IsSendMessageEnabled, Converter={StaticResource InverseBooleanConverter}}" />
+    <ScrollView>
+        <VerticalStackLayout Spacing="20"
+                Padding="20">
+            <!-- Connection Section -->
+            <Border BackgroundColor="{StaticResource Surface}"
+                    Padding="15"
+                    StrokeShape="RoundRectangle 8,8,8,8"
+                    Stroke="{StaticResource Gray600}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="WebSocket Connection"
+                           FontSize="18"
+                           TextColor="{StaticResource White}"/>
+                    <Button x:Name="ConnectButton"
+                            Text="Connect"
+                            BackgroundColor="{Binding ButtonColor}"
+                            Clicked="ConnectButton_Clicked"/>
+                    <Label x:Name="ConnectionStatusLabel"
+                           Text="{Binding ConnectionStatus}"
+                           TextColor="{StaticResource White}"/>
+                </VerticalStackLayout>
+            </Border>
 
-        <!-- Message Entry -->
-        <Entry
-            x:Name="MessageEntry"
-            Placeholder="Enter message"
-            BackgroundColor="{StaticResource Surface}"
-            TextColor="{StaticResource White}"
-            PlaceholderColor="{StaticResource Gray500}"
-            Margin="0,20" />
-
-        <!-- Send Message Button -->
-        <Button
-            Text="Send Message"
-            Clicked="SendButton_Clicked"
-            Style="{StaticResource PrimaryButton}"
-            IsEnabled="{Binding IsSendMessageEnabled}" />
-
-        <!-- Status Label -->
-        <Label
-            x:Name="StatusLabel"
-            Text="Not connected"
-            Style="{StaticResource BodyText}"
-            VerticalOptions="End" />
-    </VerticalStackLayout>
+            <!-- Message Section -->
+            <Border BackgroundColor="{StaticResource Surface}"
+                    Padding="15"
+                    StrokeShape="RoundRectangle 8,8,8,8"
+                    Stroke="{StaticResource Gray600}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Send Message"
+                           FontSize="18"
+                           TextColor="{StaticResource White}"/>
+                    <Entry x:Name="MessageEntry"
+                           Placeholder="Enter message"
+                           PlaceholderColor="{StaticResource Gray500}"
+                           TextColor="{StaticResource White}"
+                           BackgroundColor="{StaticResource Surface}"
+                           IsEnabled="{Binding IsSendMessageEnabled}"/>
+                    <Button x:Name="SendButton"
+                            Text="Send"
+                            IsEnabled="{Binding IsSendMessageEnabled}"
+                            BackgroundColor="{Binding SendMessageButtonColor}"
+                            Clicked="SendButton_Clicked"/>
+                    <Label x:Name="StatusLabel"
+                           Text=""
+                           TextColor="{StaticResource White}"/>
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>

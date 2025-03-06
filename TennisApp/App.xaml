@@ -1,9 +1,8 @@
-﻿<?xml version = "1.0" encoding = "UTF-8" ?>
+﻿<?xml version="1.0" encoding="UTF-8" ?>
 <Application xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:TennisApp"
              xmlns:converters="clr-namespace:TennisApp.Converters"
-             xmlns:viewmodels="clr-namespace:TennisApp.ViewModels"
              x:Class="TennisApp.App">
     <Application.Resources>
         <ResourceDictionary>
@@ -11,27 +10,57 @@
                 <ResourceDictionary Source="Resources/Styles/Colors.xaml"/>
                 <ResourceDictionary Source="Resources/Styles/Styles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
-            <Style x:Key="FormEntry" TargetType="Entry">
-                <Setter Property="BackgroundColor" Value="{StaticResource Surface}"/>
-                <Setter Property="TextColor" Value="{StaticResource White}"/>
-                <Setter Property="PlaceholderColor" Value="{StaticResource Gray500}"/>
-                <Setter Property="Margin" Value="0,5"/>
-            </Style>
-            <Style x:Key="FormDatePicker" TargetType="DatePicker">
-                <Setter Property="BackgroundColor" Value="{StaticResource Surface}"/>
-                <Setter Property="TextColor" Value="{StaticResource White}"/>
-                <Setter Property="Margin" Value="0,5"/>
+
+            <!-- Form Styles -->
+            <Style x:Key="FormEntry"
+                    TargetType="Entry">
+                <Setter Property="BackgroundColor"
+                        Value="{StaticResource Surface}"/>
+                <Setter Property="TextColor"
+                        Value="{StaticResource White}"/>
+                <Setter Property="PlaceholderColor"
+                        Value="{StaticResource Gray500}"/>
+                <Setter Property="Margin"
+                        Value="0,5"/>
             </Style>
 
-            <Style x:Key="SectionHeader" TargetType="Label">
-                <Setter Property="FontSize" Value="18"/>
-                <Setter Property="TextColor" Value="{StaticResource White}"/>
-                <Setter Property="Margin" Value="0,15,0,5"/>
+            <Style x:Key="FormDatePicker"
+                    TargetType="DatePicker">
+                <Setter Property="BackgroundColor"
+                        Value="{StaticResource Surface}"/>
+                <Setter Property="TextColor"
+                        Value="{StaticResource White}"/>
+                <Setter Property="Margin"
+                        Value="0,5"/>
             </Style>
+
+            <Style x:Key="SectionHeader"
+                    TargetType="Label">
+                <Setter Property="FontSize"
+                        Value="18"/>
+                <Setter Property="TextColor"
+                        Value="{StaticResource White}"/>
+                <Setter Property="Margin"
+                        Value="0,15,0,5"/>
+            </Style>
+
+            <Style x:Key="PrimaryButton"
+                    TargetType="Button">
+                <Setter Property="BackgroundColor"
+                        Value="{StaticResource Primary}"/>
+                <Setter Property="TextColor"
+                        Value="{StaticResource White}"/>
+                <Setter Property="Padding"
+                        Value="10"/>
+                <Setter Property="CornerRadius"
+                        Value="8"/>
+            </Style>
+
+            <!-- Converters -->
+            <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
             <converters:BooleanToColorConverter x:Key="BooleanToColorConverter"/>
             <converters:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
             <converters:BooleanToLayoutOptionsConverter x:Key="BooleanToLayoutOptionsConverter"/>
-            <viewmodels:WebSocketViewModel x:Key="WebSocketViewModel"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
