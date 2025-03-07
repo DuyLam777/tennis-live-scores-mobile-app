@@ -34,7 +34,7 @@
                         BorderColor="Transparent">
                         <Frame.Triggers>
                             <DataTrigger TargetType="Frame" Binding="{Binding IsNew}" Value="True">
-                                <Setter Property="BorderColor" Value="Yellow" />
+                                <Setter Property="BorderColor" Value="{StaticResource Primary}" />
                             </DataTrigger>
                         </Frame.Triggers>
                         <Label
