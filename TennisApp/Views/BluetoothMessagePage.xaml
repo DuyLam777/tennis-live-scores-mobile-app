@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
@@ -6,18 +5,23 @@
     Title="Bluetooth Messages"
     BackgroundColor="{StaticResource Background}">
 
-    <Grid
-        RowDefinitions="*,Auto"
-        Padding="20"
-        RowSpacing="10">
+    <Grid RowDefinitions="Auto,*,Auto" Padding="20" RowSpacing="10">
+        <!-- Big Connect Button that shows connection status -->
+        <Button 
+            x:Name="btnStart" 
+            Text="Connect" 
+            FontSize="24"
+            Style="{StaticResource PrimaryButton}"
+            BackgroundColor="LightGreen"
+            Clicked="StartButton_Clicked"
+            HeightRequest="60" />
 
-        <!-- Message List -->
+        <!-- History of messages -->
         <CollectionView
-            Grid.Row="0"
+            Grid.Row="1"
             x:Name="messagesList"
             BackgroundColor="{StaticResource Background}"
-            Margin="0,0,0,10">
-
+            Margin="0,10,0,10">
             <CollectionView.ItemTemplate>
                 <DataTemplate>
                     <Frame
@@ -25,41 +29,17 @@
                         Margin="0,4"
                         Padding="12"
                         BackgroundColor="{StaticResource Surface}"
-                        HorizontalOptions="{Binding IsSent, Converter={StaticResource BooleanToLayoutOptionsConverter}}">
-
+                        HorizontalOptions="Fill">
                         <Label
                             Text="{Binding Text}"
-                            TextColor="{Binding IsSent, Converter={StaticResource BooleanToColorConverter}}"
+                            TextColor="{StaticResource White}"
                             FontSize="16"
-                            LineBreakMode="NoWrap"
-                            MaxLines="1"
+                            LineBreakMode="WordWrap"
                             HorizontalOptions="Start"
                             VerticalOptions="Center"/>
                     </Frame>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
-
-        <!-- Input Area -->
-        <Grid
-            Grid.Row="1"
-            ColumnDefinitions="*,Auto"
-            ColumnSpacing="10">
-
-            <Entry
-                x:Name="messageInput"
-                Placeholder="Enter message"
-                BackgroundColor="{StaticResource Surface}"
-                TextColor="{StaticResource White}"
-                PlaceholderColor="{StaticResource Gray500}"
-                Margin="0,0,0,5"
-                ClearButtonVisibility="WhileEditing"/>
-
-            <Button
-                Text="Send"
-                Style="{StaticResource PrimaryButton}"
-                Clicked="btnSendMessage_Clicked"
-                Grid.Column="1"/>
-        </Grid>
     </Grid>
 </ContentPage>
