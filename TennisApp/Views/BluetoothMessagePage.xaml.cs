@@ -1,8 +1,11 @@
 using System.Collections.ObjectModel;
 using System.Text;
+using System.ComponentModel;
+using System.Linq;
 using Plugin.BLE.Abstractions.Contracts;
 using TennisApp.Config;
 using TennisApp.Services;
+using TennisApp.Utils;
 
 namespace TennisApp.Views
 {
@@ -15,6 +18,9 @@ namespace TennisApp.Views
 
         private WebSocketService? _webSocketService;
         private bool _isWebSocketConnected = false;
+
+        // Flag to determine if auto-scroll should occur (true if user is at the top)
+        private bool _shouldAutoScroll = true;
 
         private StringBuilder _messageBuffer = new StringBuilder();
 
@@ -33,39 +39,43 @@ namespace TennisApp.Views
             _connectedDevice = connectedDevice;
             _messages = new ObservableCollection<Message>();
             messagesList.ItemsSource = _messages;
+            messagesList.Scrolled += MessagesList_Scrolled;
             DiscoverServicesAndCharacteristicsAsync();
+        }
+
+        // Tracks the scroll position. If the first visible item is index 0, then we auto-scroll new messages.
+        private void MessagesList_Scrolled(object? sender, ItemsViewScrolledEventArgs e)
+        {
+            _shouldAutoScroll = (e.FirstVisibleItemIndex == 0);
         }
 
         private async void StartButton_Clicked(object sender, EventArgs e)
         {
             if (_isWebSocketConnected)
             {
-                // Disconnect if already connected.
                 if (_webSocketService != null)
                 {
                     await _webSocketService.CloseAsync();
                 }
                 _isWebSocketConnected = false;
                 btnStart.Text = "Connect";
-                // Reset to the default color (or use a resource if defined)
-                btnStart.BackgroundColor = Colors.LightGreen; // Change to your default color as needed
+                btnStart.BackgroundColor = ColorHelpers.GetResourceColor("Primary");
                 await DisplayAlert("Disconnected", "WebSocket disconnected", "OK");
-                _messages.Add(new Message { Text = "WebSocket disconnected" });
+                InsertNewMessage("WebSocket disconnected");
             }
             else
             {
                 try
                 {
-                    // Connect to WebSocket.
                     _webSocketService = new WebSocketService();
                     string webSocketUrl = AppConfig.GetWebSocketUrl();
                     Console.WriteLine($"Connecting to WebSocket server at {webSocketUrl}...");
                     await _webSocketService.ConnectAsync(webSocketUrl);
                     _isWebSocketConnected = true;
                     btnStart.Text = "Disconnect";
-                    btnStart.BackgroundColor = Colors.Red;
+                    btnStart.BackgroundColor = ColorHelpers.GetResourceColor("Danger");
                     await DisplayAlert("Connected", "WebSocket connected successfully", "OK");
-                    _messages.Add(new Message { Text = "WebSocket connected" });
+                    InsertNewMessage("WebSocket connected");
                 }
                 catch (Exception ex)
                 {
@@ -121,7 +131,7 @@ namespace TennisApp.Views
         private async void NotifyCharacteristic_ValueUpdated(object? sender, Plugin.BLE.Abstractions.EventArgs.CharacteristicUpdatedEventArgs e)
         {
             // Append the new fragment to the buffer
-            string fragment = System.Text.Encoding.UTF8.GetString(e.Characteristic.Value);
+            string fragment = Encoding.UTF8.GetString(e.Characteristic.Value);
             _messageBuffer.Append(fragment);
 
             // Check if we have received a complete message (assuming the message ends with '\n')
@@ -150,10 +160,8 @@ namespace TennisApp.Views
         // Process the complete Bluetooth message
         private async Task ProcessBluetoothMessage(string message)
         {
-            // Check if the message matches the expected format
             if (message.StartsWith("Set,"))
             {
-                // Prepend "match id here," to the message
                 string modifiedMessage = "match id here," + message;
                 if (_isWebSocketConnected && _webSocketService != null)
                 {
@@ -166,18 +174,32 @@ namespace TennisApp.Views
                         Console.WriteLine($"Error sending via WebSocket: {ex.Message}");
                     }
                 }
-                MainThread.BeginInvokeOnMainThread(() =>
-                {
-                    _messages.Add(new Message { Text = modifiedMessage });
-                });
+                InsertNewMessage(modifiedMessage);
             }
             else
             {
-                MainThread.BeginInvokeOnMainThread(() =>
-                {
-                    _messages.Add(new Message { Text = message });
-                });
+                InsertNewMessage(message);
             }
+        }
+
+        // Helper to insert a new message at the top with a yellow border highlight that resets after 3 seconds.
+        // It will auto-scroll only if the user is already at the top.
+        private void InsertNewMessage(string text)
+        {
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                var newMessage = new Message { Text = text, IsNew = true };
+                _messages.Insert(0, newMessage);
+                if (_shouldAutoScroll)
+                {
+                    messagesList.ScrollTo(newMessage, position: ScrollToPosition.Start);
+                }
+                Dispatcher.StartTimer(TimeSpan.FromSeconds(2), () =>
+                {
+                    newMessage.IsNew = false;
+                    return false; // run once
+                });
+            });
         }
 
         // When the page is disappearing, disconnect Bluetooth notifications and the WebSocket.
@@ -199,10 +221,41 @@ namespace TennisApp.Views
         }
     }
 
-    // Updated Message class – you can remove the IsSent property if not needed.
-    public class Message
+    // Message model with an IsNew flag for UI highlighting
+    public class Message : INotifyPropertyChanged
     {
-        public string? Text { get; set; }
-    }
+        private string? _text;
+        public string? Text
+        {
+            get => _text;
+            set
+            {
+                if (_text != value)
+                {
+                    _text = value;
+                    OnPropertyChanged(nameof(Text));
+                }
+            }
+        }
 
+        private bool _isNew;
+        public bool IsNew
+        {
+            get => _isNew;
+            set
+            {
+                if (_isNew != value)
+                {
+                    _isNew = value;
+                    OnPropertyChanged(nameof(IsNew));
+                }
+            }
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+        protected void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+    }
 }
