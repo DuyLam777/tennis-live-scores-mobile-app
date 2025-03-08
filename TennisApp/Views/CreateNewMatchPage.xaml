@@ -5,54 +5,71 @@
              x:Class="TennisApp.Views.CreateNewMatchPage"
              Title="Create Match"
              BackgroundColor="{StaticResource Background}">
-
     <ScrollView>
         <VerticalStackLayout Padding="20">
-            <!-- Match Name -->
-            <Entry
-                Placeholder="Match Name"
-                Text="{Binding MatchName}"
-                Style="{StaticResource FormEntry}"
-                Margin="0,0,0,10"/>
-
-            <!-- Date Picker -->
+            <!-- Match Time -->
+            <Label Text="Match Time"
+                    Style="{StaticResource SectionHeader}"/>
             <DatePicker
-                Date="{Binding MatchDate}"
+                Date="{Binding MatchTime, Mode=TwoWay}"
                 Format="D"
                 Style="{StaticResource FormDatePicker}"
                 Margin="0,0,0,10"/>
+            <TimePicker
+                Time="{Binding MatchTime, Converter={StaticResource DateTimeToTimeSpanConverter}, Mode=TwoWay}"
+                Format="t"
+                Margin="0,0,0,20"/>
 
-            <!-- Location -->
-            <Entry
-                Placeholder="Location"
-                Text="{Binding Location}"
-                Style="{StaticResource FormEntry}"
+            <!-- Court Selection -->
+            <Label Text="Select Court"
+                    Style="{StaticResource SectionHeader}"/>
+            <Picker
+                ItemsSource="{Binding AvailableCourts}"
+                ItemDisplayBinding="{Binding Name}"
+                SelectedItem="{Binding SelectedCourt}"
+                Title="Select a court"
                 Margin="0,0,0,20"/>
 
             <!-- Player Selection -->
             <Label Text="Select Players"
                     Style="{StaticResource SectionHeader}"/>
-            <CollectionView
-                ItemsSource="{Binding AvailablePlayers}"
-                SelectionMode="None"
-                Margin="0,0,0,20">
+            <Grid ColumnDefinitions="*, *"
+                    RowDefinitions="Auto, Auto"
+                    Margin="0,0,0,20">
+                <Label Text="Player 1"
+                        Grid.Column="0"
+                        Grid.Row="0"/>
+                <Picker
+                    ItemsSource="{Binding AvailablePlayers}"
+                    ItemDisplayBinding="{Binding Name}"
+                    SelectedItem="{Binding SelectedPlayer1}"
+                    Title="Select player 1"
+                    Grid.Column="0"
+                        Grid.Row="1"
+                    Margin="0,0,5,0"/>
 
-                <CollectionView.ItemTemplate>
-                    <DataTemplate>
-                        <Grid Padding="10"
-                                ColumnDefinitions="*,Auto">
-                            <Label
-                                Text="{Binding Name}"
-                                VerticalOptions="Center"/>
+                <Label Text="Player 2"
+                        Grid.Column="1"
+                        Grid.Row="0"/>
+                <Picker
+                    ItemsSource="{Binding AvailablePlayers}"
+                    ItemDisplayBinding="{Binding Name}"
+                    SelectedItem="{Binding SelectedPlayer2}"
+                    Title="Select player 2"
+                    Grid.Column="1"
+                        Grid.Row="1"
+                    Margin="5,0,0,0"/>
+            </Grid>
 
-                            <CheckBox
-                                IsChecked="{Binding IsSelected}"
-                                Grid.Column="1"
-                                Color="{StaticResource Primary}"/>
-                        </Grid>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
+            <!-- Scoreboard Selection -->
+            <Label Text="Select Scoreboard"
+                    Style="{StaticResource SectionHeader}"/>
+            <Picker
+                ItemsSource="{Binding AvailableScoreboards}"
+                ItemDisplayBinding="{Binding DisplayName}"
+                SelectedItem="{Binding SelectedScoreboard}"
+                Title="Select a scoreboard"
+                Margin="0,0,0,20"/>
 
             <!-- Error Message -->
             <Label

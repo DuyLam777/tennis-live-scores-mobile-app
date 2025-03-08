@@ -15,7 +15,10 @@ public partial class App : Application
         MainPage = new AppShell();
     }
 
-    private void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
+    private void TaskScheduler_UnobservedTaskException(
+        object? sender,
+        UnobservedTaskExceptionEventArgs e
+    )
     {
         Console.WriteLine($"UNHANDLED TASK EXCEPTION: {e.Exception}");
         e.SetObserved(); // Prevent the app from crashing
@@ -25,14 +28,14 @@ public partial class App : Application
     {
         var exception = e.ExceptionObject as Exception;
         Console.WriteLine($"UNHANDLED EXCEPTION: {exception?.Message}");
-        
+
         // Log the exception
         if (exception != null)
         {
             Console.WriteLine($"Exception Type: {exception.GetType().Name}");
             Console.WriteLine($"Stack Trace: {exception.StackTrace}");
             Console.WriteLine($"Source: {exception.Source}");
-            
+
             if (exception.InnerException != null)
             {
                 Console.WriteLine($"Inner Exception: {exception.InnerException.Message}");
@@ -43,7 +46,7 @@ public partial class App : Application
 
     protected override void OnStart()
     {
-        try 
+        try
         {
             base.OnStart();
         }
@@ -55,7 +58,7 @@ public partial class App : Application
 
     protected override void OnSleep()
     {
-        try 
+        try
         {
             base.OnSleep();
         }
@@ -67,7 +70,7 @@ public partial class App : Application
 
     protected override void OnResume()
     {
-        try 
+        try
         {
             base.OnResume();
         }

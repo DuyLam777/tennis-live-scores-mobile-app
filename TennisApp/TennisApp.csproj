@@ -73,4 +73,8 @@
 		<PackageReference Include="Plugin.BLE" Version="3.1.0" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="Platforms/Android/Resources/xml/" />
+	</ItemGroup>
+
 </Project>

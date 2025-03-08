@@ -10,16 +10,28 @@ public partial class CreateMatchViewModel : ObservableObject
     private readonly HttpClient _httpClient;
 
     [ObservableProperty]
-    private string matchName = string.Empty;
-
-    [ObservableProperty]
-    private DateTime matchDate = DateTime.Now;
-
-    [ObservableProperty]
-    private string location = string.Empty;
+    private DateTime matchTime = DateTime.Now;
 
     [ObservableProperty]
     private ObservableCollection<Player> availablePlayers = new();
+
+    [ObservableProperty]
+    private ObservableCollection<Court> availableCourts = new();
+
+    [ObservableProperty]
+    private ObservableCollection<Scoreboard> availableScoreboards = new();
+
+    [ObservableProperty]
+    private Player selectedPlayer1;
+
+    [ObservableProperty]
+    private Player selectedPlayer2;
+
+    [ObservableProperty]
+    private Court selectedCourt;
+
+    [ObservableProperty]
+    private Scoreboard selectedScoreboard;
 
     [ObservableProperty]
     private string errorMessage = string.Empty;
@@ -33,26 +45,60 @@ public partial class CreateMatchViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void LoadPlayers()
+    private async Task LoadData()
     {
         try
         {
             IsLoading = true;
 
-            // Clear existing players
+            // Clear existing collections
             AvailablePlayers.Clear();
+            AvailableCourts.Clear();
+            AvailableScoreboards.Clear();
 
-            // Here we will call the actual API to get the list of players
-            // For now, using mock data
-            AvailablePlayers.Add(new Player { Id = 1, Name = "Player 1" });
-            AvailablePlayers.Add(new Player { Id = 2, Name = "Player 2" });
-            AvailablePlayers.Add(new Player { Id = 3, Name = "Player 3" });
+            // Log the api url
+            Console.WriteLine($"API URL: {_httpClient.BaseAddress}");
+
+            // Call the APIs in parallel to improve performance
+            var playersTask = _httpClient.GetFromJsonAsync<List<Player>>("api/players");
+            var courtsTask = _httpClient.GetFromJsonAsync<List<Court>>("api/courts");
+            var scoreboardsTask = _httpClient.GetFromJsonAsync<List<Scoreboard>>("api/scoreboards");
+
+            await Task.WhenAll(playersTask, courtsTask, scoreboardsTask);
+
+            var players = await playersTask;
+            if (players != null)
+            {
+                foreach (var player in players)
+                {
+                    AvailablePlayers.Add(player);
+                }
+            }
+
+            var courts = await courtsTask;
+            if (courts != null)
+            {
+                foreach (var court in courts)
+                {
+                    AvailableCourts.Add(court);
+                }
+            }
+
+            var scoreboards = await scoreboardsTask;
+            if (scoreboards != null)
+            {
+                foreach (var scoreboard in scoreboards)
+                {
+                    Console.WriteLine($"Scoreboard: {scoreboard.Id}");
+                    AvailableScoreboards.Add(scoreboard);
+                }
+            }
 
             ErrorMessage = string.Empty;
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Error loading players: {ex.Message}";
+            ErrorMessage = $"Error loading data: {ex.Message}";
         }
         finally
         {
@@ -64,12 +110,19 @@ public partial class CreateMatchViewModel : ObservableObject
     private async Task CreateMatchAsync()
     {
         if (
-            string.IsNullOrWhiteSpace(MatchName)
-            || string.IsNullOrWhiteSpace(Location)
-            || AvailablePlayers.Count(p => p.IsSelected) < 2
+            SelectedPlayer1 == null
+            || SelectedPlayer2 == null
+            || SelectedCourt == null
+            || SelectedScoreboard == null
         )
         {
-            ErrorMessage = "Please fill all fields and select at least 2 players";
+            ErrorMessage = "Please select all required fields";
+            return;
+        }
+
+        if (SelectedPlayer1.Id == SelectedPlayer2.Id)
+        {
+            ErrorMessage = "Please select two different players";
             return;
         }
 
@@ -77,15 +130,17 @@ public partial class CreateMatchViewModel : ObservableObject
         {
             IsLoading = true;
 
-            var match = new
+            // Create DTO that matches the API's expected format
+            var createMatchDto = new CreateMatchDto
             {
-                Name = MatchName,
-                Date = MatchDate,
-                Location = Location,
-                PlayerIds = AvailablePlayers.Where(p => p.IsSelected).Select(p => p.Id).ToList(),
+                Player1Id = SelectedPlayer1.Id,
+                Player2Id = SelectedPlayer2.Id,
+                CourtId = SelectedCourt.Id,
+                ScoreboardId = SelectedScoreboard.Id,
+                MatchTime = MatchTime,
             };
 
-            var response = await _httpClient.PostAsJsonAsync("api/matches", match);
+            var response = await _httpClient.PostAsJsonAsync("api/matches", createMatchDto);
             response.EnsureSuccessStatusCode();
 
             await Shell.Current.DisplayAlert("Success", "Match created!", "OK");
@@ -106,11 +161,30 @@ public class Player : ObservableObject
 {
     public int Id { get; set; }
     public string? Name { get; set; }
+}
 
-    private bool isSelected;
-    public bool IsSelected
-    {
-        get => isSelected;
-        set => SetProperty(ref isSelected, value);
-    }
+public class Court : ObservableObject
+{
+    public int Id { get; set; }
+    public string? Name { get; set; }
+}
+
+public class Scoreboard : ObservableObject
+{
+    public int Id { get; set; }
+
+    public int BatteryLevel { get; set; }
+
+    public DateTime LastConnected { get; set; }
+
+    public string? DisplayName => $"Scoreboard {Id}";
+}
+
+public class CreateMatchDto
+{
+    public int Player1Id { get; set; }
+    public int Player2Id { get; set; }
+    public int CourtId { get; set; }
+    public int ScoreboardId { get; set; }
+    public DateTime MatchTime { get; set; }
 }

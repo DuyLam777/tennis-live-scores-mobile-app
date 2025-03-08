@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using TennisApp.Config;
 using TennisApp.Services;
 using TennisApp.ViewModels;
 using TennisApp.Views;
@@ -23,7 +24,7 @@ public static class MauiProgram
             "WebApp",
             httpClient =>
             {
-                httpClient.BaseAddress = new Uri("https://localhost:5020");
+                httpClient.BaseAddress = new Uri(AppConfig.GetApiUrl());
             }
         );
 

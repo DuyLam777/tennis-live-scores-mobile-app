@@ -16,8 +16,7 @@ public partial class CreateNewMatchPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
-
         // Initialize or refresh data when the page appears
-        _viewModel.LoadPlayersCommand.Execute(null);
+        _viewModel.LoadDataCommand.Execute(null);
     }
 }
