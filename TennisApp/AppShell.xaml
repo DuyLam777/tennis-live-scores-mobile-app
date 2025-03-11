@@ -32,14 +32,14 @@
             ContentTemplate="{DataTemplate views:BluetoothConnectionPage}"
             Route="Bluetooth"/>
 
-    <ShellContent Title="WebSocket"
-            Icon="websocket_icon.svg"
-            ContentTemplate="{DataTemplate views:WebSocketPage}"
-            Route="WebSocket"/>
 
     <ShellContent Title="Create Match"
             Icon="create_new_match.svg"
             ContentTemplate="{DataTemplate views:CreateNewMatchPage}"
             Route="CreateMatch"/>
 
+    <ShellContent Title="WebSocket ONLY FOR TESTING"
+            Icon="websocket_icon.svg"
+            ContentTemplate="{DataTemplate views:WebSocketPage}"
+            Route="WebSocket"/>
 </Shell>

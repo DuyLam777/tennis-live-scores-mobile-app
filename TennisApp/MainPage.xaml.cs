@@ -1,23 +1,55 @@
-﻿namespace TennisApp;
+﻿using TennisApp.ViewModels;
+using TennisApp.Views;
+
+namespace TennisApp;
 
 public partial class MainPage : ContentPage
 {
-    int count = 0;
+    private readonly MainPageViewModel _viewModel;
 
-    public MainPage()
+    public MainPage(MainPageViewModel viewModel)
     {
         InitializeComponent();
+        _viewModel = viewModel;
+        BindingContext = _viewModel;
+        Console.WriteLine("MainPage initialized with MainPageViewModel as BindingContext");
     }
 
-    private void OnCounterClicked(object sender, EventArgs e)
+    private async void OnStartNewMatch(object sender, EventArgs e)
     {
-        count++;
-
-        if (count == 1)
-            CounterBtn.Text = $"Tesetsetset {count} time";
+        // Get the required ViewModel through dependency injection
+        var createMatchViewModel =
+            Handler?.MauiContext?.Services?.GetService<CreateMatchViewModel>();
+        if (createMatchViewModel != null)
+        {
+            // Navigate to new match setup page with the view model
+            await Navigation.PushAsync(new CreateNewMatchPage(createMatchViewModel));
+        }
         else
-            CounterBtn.Text = $"TESTESESTSET123 {count} times";
+        {
+            // Handle the case where the ViewModel is not available
+            await DisplayAlert("Error", "Could not initialize the match creation page.", "OK");
+        }
+    }
 
-        SemanticScreenReader.Announce(CounterBtn.Text);
+    private async void OnConnectScoreboard(object sender, EventArgs e)
+    {
+        // Navigate to bluetooth connection page
+        await Navigation.PushAsync(new BluetoothConnectionPage());
+    }
+
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        // Restart the WebSocket connection when returning to this page
+        _ = _viewModel.StartListeningAsync();
+        Console.WriteLine("MainPage appeared - restarting WebSocket connection");
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        // Clean up using the ViewModel
+        _ = _viewModel.CleanupAsync();
     }
 }

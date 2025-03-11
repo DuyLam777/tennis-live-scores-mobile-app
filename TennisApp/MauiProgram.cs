@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Net.Http;
+using Microsoft.Extensions.Logging;
 using TennisApp.Config;
 using TennisApp.Services;
 using TennisApp.ViewModels;
@@ -19,31 +20,33 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
 
-        // Configure HttpClient
-        builder.Services.AddHttpClient(
-            "WebApp",
-            httpClient =>
-            {
-                httpClient.BaseAddress = new Uri(AppConfig.GetApiUrl());
-            }
-        );
+        // Register HttpClient with base address
+        builder.Services.AddSingleton<HttpClient>(serviceProvider =>
+        {
+            var httpClient = new HttpClient { BaseAddress = new Uri(AppConfig.GetApiUrl()) };
+            return httpClient;
+        });
 
-        // Register HttpClient factory
-        builder.Services.AddTransient<HttpClient>(provider =>
-            provider.GetRequiredService<IHttpClientFactory>().CreateClient("WebApp")
-        );
-
-        // Register Services
+        // Register WebSocket services
         builder.Services.AddSingleton<WebSocketService>();
+        builder.Services.AddSingleton<CourtAvailabilityService>(
+            provider => new CourtAvailabilityService(
+                provider.GetRequiredService<WebSocketService>(),
+                AppConfig.GetWebSocketUrl()
+            )
+        );
 
         // Register ViewModels
         builder.Services.AddTransient<CreateMatchViewModel>();
+        builder.Services.AddSingleton<MainPageViewModel>();
 
         // Register Pages
+        builder.Services.AddTransient<CreateNewMatchPage>();
         builder.Services.AddTransient<MainPage>();
         builder.Services.AddTransient<BluetoothConnectionPage>();
-        builder.Services.AddTransient<WebSocketPage>();
-        builder.Services.AddTransient<CreateNewMatchPage>();
+
+        // Register app shell
+        builder.Services.AddSingleton<AppShell>();
 
 #if DEBUG
         builder.Logging.AddDebug();

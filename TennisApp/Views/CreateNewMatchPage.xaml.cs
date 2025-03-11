@@ -13,10 +13,11 @@ public partial class CreateNewMatchPage : ContentPage
         BindingContext = _viewModel;
     }
 
-    protected override void OnAppearing()
+    protected override void OnDisappearing()
     {
-        base.OnAppearing();
-        // Initialize or refresh data when the page appears
-        _viewModel.LoadDataCommand.Execute(null);
+        base.OnDisappearing();
+
+        // Cancel any ongoing loading operations when navigating away
+        _viewModel.CancelLoading();
     }
 }

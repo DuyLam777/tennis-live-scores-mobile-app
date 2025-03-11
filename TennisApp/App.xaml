@@ -61,6 +61,8 @@
             <converters:BooleanToColorConverter x:Key="BooleanToColorConverter"/>
             <converters:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
             <converters:BooleanToLayoutOptionsConverter x:Key="BooleanToLayoutOptionsConverter"/>
+            <converters:BoolToStringConverter x:Key="BoolToStringConverter"/>
+            <converters:StringNotEmptyConverter x:Key="StringNotEmptyConverter"/>
             <converters:DateTimeToTimeSpanConverter x:Key="DateTimeToTimeSpanConverter"/>
         </ResourceDictionary>
     </Application.Resources>

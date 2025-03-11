@@ -20,15 +20,20 @@ namespace TennisApp.Services
             {
                 if (_webSocket.State == WebSocketState.Open)
                 {
-                    await CloseAsync();
+                    // Already connected
+                    return;
                 }
+
                 // Reset WebSocket if it was previously used
                 if (_webSocket.State != WebSocketState.None)
                 {
                     _webSocket = new ClientWebSocket();
                     _cancellationTokenSource = new CancellationTokenSource();
                 }
+
+                Console.WriteLine($"Connecting to WebSocket at {url}");
                 await _webSocket.ConnectAsync(new Uri(url), _cancellationTokenSource.Token);
+                Console.WriteLine("WebSocket connected successfully");
             }
             catch (Exception ex)
             {
@@ -43,6 +48,8 @@ namespace TennisApp.Services
             {
                 throw new InvalidOperationException("WebSocket is not connected");
             }
+
+            Console.WriteLine($"Sending WebSocket message: {message}");
             var buffer = Encoding.UTF8.GetBytes(message);
             await _webSocket.SendAsync(
                 new ArraySegment<byte>(buffer),
