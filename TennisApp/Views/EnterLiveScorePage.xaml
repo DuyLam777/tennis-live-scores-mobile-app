@@ -2,23 +2,14 @@
 <ContentPage
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    x:Class="TennisApp.Views.BluetoothMessagePage"
-    Title="Bluetooth Messages"
+    x:Class="TennisApp.Views.EnterLiveScorePage"
+    Title="Enter Live Score"
     BackgroundColor="{StaticResource Background}">
     <ScrollView>
         <VerticalStackLayout Padding="20"
                              Spacing="20">
-            <!-- Connect/Disconnect Button -->
-            <Button
-                x:Name="btnStart"
-                Text="Connect"
-                FontSize="24"
-                Style="{StaticResource PrimaryButton}"
-                Clicked="StartButton_Clicked"
-                HeightRequest="60"/>
-
-            <!-- Scoreboard Display -->
-            <Label Text="Scoreboard"
+            <!-- Title -->
+            <Label Text="Enter Live Score"
                    Style="{StaticResource Headline}"
                    HorizontalOptions="Center"/>
 
@@ -94,38 +85,40 @@
                 </Frame>
             </Grid>
 
-            <!-- Messages Log -->
-            <CollectionView
-                x:Name="messagesList"
-                BackgroundColor="{StaticResource Background}">
-                <CollectionView.ItemTemplate>
-                    <DataTemplate>
-                        <Frame
-                            CornerRadius="20"
-                            Margin="0,4"
-                            Padding="12"
-                            BackgroundColor="{StaticResource Surface}"
-                            HorizontalOptions="Fill"
-                            BorderColor="Transparent">
-                            <Frame.Triggers>
-                                <DataTrigger TargetType="Frame"
-                                             Binding="{Binding IsNew}"
-                                             Value="True">
-                                    <Setter Property="BorderColor"
-                                            Value="{StaticResource Primary}"/>
-                                </DataTrigger>
-                            </Frame.Triggers>
-                            <Label
-                                Text="{Binding Text}"
-                                TextColor="{StaticResource White}"
-                                FontSize="16"
-                                LineBreakMode="WordWrap"
-                                HorizontalOptions="Start"
-                                VerticalOptions="Center"/>
-                        </Frame>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
+            <!-- Action Buttons -->
+            <Grid ColumnDefinitions="*,*"
+                  ColumnSpacing="10">
+                <Button Text="Add Set P1"
+                        Style="{StaticResource PrimaryButton}"
+                        Clicked="AddSetP1_Clicked"
+                        Grid.Column="0"/>
+                <Button Text="Add Set P2"
+                        Style="{StaticResource PrimaryButton}"
+                        Clicked="AddSetP2_Clicked"
+                        Grid.Column="1"/>
+            </Grid>
+            <Grid ColumnDefinitions="*,*"
+                  ColumnSpacing="10">
+                <Button Text="Add Game P1"
+                        Style="{StaticResource PrimaryButton}"
+                        Clicked="AddGameP1_Clicked"
+                        Grid.Column="0"/>
+                <Button Text="Add Game P2"
+                        Style="{StaticResource PrimaryButton}"
+                        Clicked="AddGameP2_Clicked"
+                        Grid.Column="1"/>
+            </Grid>
+            <Grid ColumnDefinitions="*,*"
+                  ColumnSpacing="10">
+                <Button Text="Clear Games"
+                        Style="{StaticResource SecondaryButton}"
+                        Clicked="ClearGames_Clicked"
+                        Grid.Column="0"/>
+                <Button Text="Clear Sets"
+                        Style="{StaticResource SecondaryButton}"
+                        Clicked="ClearSets_Clicked"
+                        Grid.Column="1"/>
+            </Grid>
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

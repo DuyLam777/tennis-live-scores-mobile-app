@@ -1,11 +1,14 @@
-using System.Collections.ObjectModel;
+using System;
 using System.Text;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 using Plugin.BLE.Abstractions.Contracts;
 using TennisApp.Config;
 using TennisApp.Services;
 using TennisApp.Utils;
+using Microsoft.Maui.Controls;
+using System.Collections.ObjectModel;
 
 namespace TennisApp.Views
 {
@@ -19,8 +22,11 @@ namespace TennisApp.Views
         private WebSocketService? _webSocketService;
         private bool _isWebSocketConnected = false;
 
-        // Flag to determine if auto-scroll should occur (true if user is at the top)
-        private bool _shouldAutoScroll = true;
+        // Score fields
+        private int player1Sets = 0;
+        private int player2Sets = 0;
+        private int player1Games = 0;
+        private int player2Games = 0;
 
         private StringBuilder _messageBuffer = new StringBuilder();
 
@@ -35,7 +41,7 @@ namespace TennisApp.Views
         public BluetoothMessagePage(IDevice connectedDevice)
         {
             InitializeComponent();
-            _defaultButtonColor = btnStart.BackgroundColor; // Save the original color from the XAML style
+            _defaultButtonColor = btnStart.BackgroundColor;
             _connectedDevice = connectedDevice;
             _messages = new ObservableCollection<Message>();
             messagesList.ItemsSource = _messages;
@@ -43,10 +49,9 @@ namespace TennisApp.Views
             DiscoverServicesAndCharacteristicsAsync();
         }
 
-        // Tracks the scroll position. If the first visible item is index 0, then we auto-scroll new messages.
         private void MessagesList_Scrolled(object? sender, ItemsViewScrolledEventArgs e)
         {
-            _shouldAutoScroll = (e.FirstVisibleItemIndex == 0);
+            // Auto-scroll logic (if needed)
         }
 
         private async void StartButton_Clicked(object sender, EventArgs e)
@@ -106,7 +111,6 @@ namespace TennisApp.Views
                             {
                                 _notifyCharacteristic = characteristic;
                                 Console.WriteLine("Notification HM-10 Characteristic Found");
-                                // Subscribe to notifications.
                                 await _notifyCharacteristic.StartUpdatesAsync();
                                 _notifyCharacteristic.ValueUpdated += NotifyCharacteristic_ValueUpdated;
                             }
@@ -130,18 +134,13 @@ namespace TennisApp.Views
 
         private async void NotifyCharacteristic_ValueUpdated(object? sender, Plugin.BLE.Abstractions.EventArgs.CharacteristicUpdatedEventArgs e)
         {
-            // Append the new fragment to the buffer
             string fragment = Encoding.UTF8.GetString(e.Characteristic.Value);
             _messageBuffer.Append(fragment);
 
-            // Check if we have received a complete message (assuming the message ends with '\n')
             string currentBuffer = _messageBuffer.ToString();
             if (currentBuffer.Contains("\n"))
             {
-                // Split based on the delimiter in case multiple messages are received in one update
                 string[] messages = currentBuffer.Split('\n');
-
-                // Process all complete messages (all but the last item, which may be incomplete)
                 for (int i = 0; i < messages.Length - 1; i++)
                 {
                     string completeMessage = messages[i].Trim();
@@ -150,69 +149,123 @@ namespace TennisApp.Views
                         await ProcessBluetoothMessage(completeMessage);
                     }
                 }
-
-                // Clear the buffer and put the last (possibly incomplete) part back
                 _messageBuffer.Clear();
                 _messageBuffer.Append(messages.Last());
             }
         }
 
-        // Process the complete Bluetooth message
+        // Updates the scoreboard UI (score labels)
+        private void UpdateScoreDisplay()
+        {
+            Player1SetsLabel.Text = $"{player1Sets}";
+            Player2SetsLabel.Text = $"{player2Sets}";
+            Player1GamesLabel.Text = $"{player1Games}";
+            Player2GamesLabel.Text = $"{player2Games}";
+        }
+
+        // Process the complete Bluetooth message and update/send only if score has changed.
         private async Task ProcessBluetoothMessage(string message)
         {
-            if (message.StartsWith("Set,"))
+            string trimmedMessage = message.Trim();
+            if (trimmedMessage.StartsWith("Set,"))
             {
-                string modifiedMessage = "match id here," + message;
-                if (_isWebSocketConnected && _webSocketService != null)
+                // Expected format: Set,XY,Games,seg1,seg2,...,seg6
+                var parts = trimmedMessage.Split(',');
+                if (parts.Length < 9)
                 {
-                    try
-                    {
-                        await _webSocketService.SendAsync(modifiedMessage);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Error sending via WebSocket: {ex.Message}");
-                    }
+                    InsertNewMessage("Invalid score format: " + trimmedMessage);
+                    return;
                 }
-                InsertNewMessage(modifiedMessage);
+                try
+                {
+                    // Parse sets (parts[1] should be two digits: first digit for Player 1, second for Player 2)
+                    if (parts[1].Length < 2)
+                    {
+                        InsertNewMessage("Invalid sets format: " + trimmedMessage);
+                        return;
+                    }
+                    int newPlayer1Sets = int.Parse(parts[1][0].ToString());
+                    int newPlayer2Sets = int.Parse(parts[1][1].ToString());
+
+                    // Parse games segments (from parts[3] onward)
+                    int newPlayer1Games = 0;
+                    int newPlayer2Games = 0;
+                    for (int i = 3; i < parts.Length; i++)
+                    {
+                        if (parts[i].Length >= 2)
+                        {
+                            if (parts[i][0] == '1') newPlayer1Games++;
+                            if (parts[i][1] == '1') newPlayer2Games++;
+                        }
+                    }
+
+                    // Only update and send if the score has changed.
+                    if (newPlayer1Sets == player1Sets &&
+                        newPlayer2Sets == player2Sets &&
+                        newPlayer1Games == player1Games &&
+                        newPlayer2Games == player2Games)
+                    {
+                        return;
+                    }
+
+                    // Update our stored score
+                    player1Sets = newPlayer1Sets;
+                    player2Sets = newPlayer2Sets;
+                    player1Games = newPlayer1Games;
+                    player2Games = newPlayer2Games;
+                    UpdateScoreDisplay();
+
+                    // Build the message (adding your match id prefix)
+                    string modifiedMessage = "match id here," + trimmedMessage;
+                    if (_isWebSocketConnected && _webSocketService != null)
+                    {
+                        try
+                        {
+                            await _webSocketService.SendAsync(modifiedMessage);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Error sending via WebSocket: {ex.Message}");
+                        }
+                    }
+                    InsertNewMessage(modifiedMessage);
+                }
+                catch (Exception ex)
+                {
+                    InsertNewMessage("Error processing score: " + ex.Message);
+                }
             }
             else
             {
-                InsertNewMessage(message);
+                // If not a score message, simply log it.
+                InsertNewMessage(trimmedMessage);
             }
         }
 
-        // Helper to insert a new message at the top with a yellow border highlight that resets after 3 seconds.
-        // It will auto-scroll only if the user is already at the top.
+        // Helper to insert a new message into the CollectionView
         private void InsertNewMessage(string text)
         {
             MainThread.BeginInvokeOnMainThread(() =>
             {
                 var newMessage = new Message { Text = text, IsNew = true };
                 _messages.Insert(0, newMessage);
-                if (_shouldAutoScroll)
-                {
-                    messagesList.ScrollTo(newMessage, position: ScrollToPosition.Start);
-                }
+                messagesList.ScrollTo(newMessage, position: ScrollToPosition.Start);
                 Dispatcher.StartTimer(TimeSpan.FromSeconds(2), () =>
                 {
                     newMessage.IsNew = false;
-                    return false; // run once
+                    return false;
                 });
             });
         }
 
-        // When the page is disappearing, disconnect Bluetooth notifications and the WebSocket.
         protected override async void OnDisappearing()
         {
             base.OnDisappearing();
-
             if (_notifyCharacteristic != null)
             {
                 await _notifyCharacteristic.StopUpdatesAsync();
                 _notifyCharacteristic.ValueUpdated -= NotifyCharacteristic_ValueUpdated;
             }
-
             if (_webSocketService != null && _isWebSocketConnected)
             {
                 await _webSocketService.CloseAsync();
@@ -221,7 +274,7 @@ namespace TennisApp.Views
         }
     }
 
-    // Message model with an IsNew flag for UI highlighting
+    // Message model for the CollectionView
     public class Message : INotifyPropertyChanged
     {
         private string? _text;
@@ -253,9 +306,7 @@ namespace TennisApp.Views
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
-        protected void OnPropertyChanged(string propertyName)
-        {
+        protected void OnPropertyChanged(string propertyName) =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
     }
 }

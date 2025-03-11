@@ -41,5 +41,10 @@
             Icon="create_new_match.svg"
             ContentTemplate="{DataTemplate views:CreateNewMatchPage}"
             Route="CreateMatch"/>
+<ShellContent Title="Enter Live Score"
+              Icon="create_new_match.svg"
+              ContentTemplate="{DataTemplate views:EnterLiveScorePage}"
+              Route="EnterLiveScore"/>
+
 
 </Shell>
