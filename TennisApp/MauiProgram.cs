@@ -27,6 +27,14 @@ public static class MauiProgram
             return httpClient;
         });
 
+        builder.ConfigureMauiHandlers(handlers =>
+        {
+            // Add handler to customize Shell behavior
+#if ANDROID
+            handlers.AddHandler(typeof(Shell), typeof(CustomShellRenderer));
+#endif
+        });
+
         // Register WebSocket services
         builder.Services.AddSingleton<WebSocketService>();
         builder.Services.AddSingleton<CourtAvailabilityService>(

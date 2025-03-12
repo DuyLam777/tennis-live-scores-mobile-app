@@ -12,6 +12,7 @@ namespace TennisApp.Services
         private volatile bool _isListening = false;
         private CancellationTokenSource? _listeningCts;
         private readonly object _syncLock = new object();
+        private List<CourtItem> _lastKnownCourts = new();
 
         // Event to notify subscribers when court availability changes
         public event EventHandler<List<CourtItem>>? CourtAvailabilityChanged;
@@ -20,6 +21,12 @@ namespace TennisApp.Services
         {
             _webSocketService = webSocketService;
             _websocketUrl = websocketUrl;
+        }
+
+        // Get the last known court state - useful for initial UI population
+        public List<CourtItem> GetCurrentCourts()
+        {
+            return _lastKnownCourts;
         }
 
         public async Task StartListeningForCourtUpdatesAsync()
@@ -32,6 +39,16 @@ namespace TennisApp.Services
                 if (_isListening)
                 {
                     Console.WriteLine("Already listening for court updates, ignoring request");
+
+                    // If we have courts already, fire the event with the last known courts
+                    if (_lastKnownCourts.Count > 0)
+                    {
+                        MainThread.BeginInvokeOnMainThread(() =>
+                        {
+                            CourtAvailabilityChanged?.Invoke(this, _lastKnownCourts);
+                        });
+                    }
+
                     return;
                 }
 
@@ -236,6 +253,9 @@ namespace TennisApp.Services
                                 $"Parsed court: {court.Id}, {court.Name}, Available: {court.IsAvailable}"
                             );
                         }
+
+                        // Store the latest courts data
+                        _lastKnownCourts = courts;
 
                         // Notify subscribers on the main thread
                         MainThread.BeginInvokeOnMainThread(() =>

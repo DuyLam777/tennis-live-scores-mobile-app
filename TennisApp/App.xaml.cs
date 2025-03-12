@@ -1,4 +1,7 @@
 ﻿using Microsoft.Maui.Controls;
+using TennisApp.Config;
+using TennisApp.Services;
+using TennisApp.ViewModels;
 
 namespace TennisApp;
 
@@ -12,7 +15,30 @@ public partial class App : Application
         AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
         TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
 
-        MainPage = new AppShell();
+        try
+        {
+            // Create AppShell with try-catch to handle any initialization errors
+            MainPage = new AppShell();
+
+            // If we reach here, AppShell initialized without errors
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exception creating AppShell: {ex.Message}");
+            Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+
+            // Fallback to a NavigationPage if AppShell fails
+            MainPage = new NavigationPage(
+                new MainPage(
+                    new MainPageViewModel(
+                        new CourtAvailabilityService(
+                            new WebSocketService(),
+                            AppConfig.GetWebSocketUrl()
+                        )
+                    )
+                )
+            );
+        }
     }
 
     private void TaskScheduler_UnobservedTaskException(
@@ -28,14 +54,12 @@ public partial class App : Application
     {
         var exception = e.ExceptionObject as Exception;
         Console.WriteLine($"UNHANDLED EXCEPTION: {exception?.Message}");
-
         // Log the exception
         if (exception != null)
         {
             Console.WriteLine($"Exception Type: {exception.GetType().Name}");
             Console.WriteLine($"Stack Trace: {exception.StackTrace}");
             Console.WriteLine($"Source: {exception.Source}");
-
             if (exception.InnerException != null)
             {
                 Console.WriteLine($"Inner Exception: {exception.InnerException.Message}");

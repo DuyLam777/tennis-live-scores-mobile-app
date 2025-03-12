@@ -17,39 +17,61 @@ public partial class MainPage : ContentPage
 
     private async void OnStartNewMatch(object sender, EventArgs e)
     {
-        // Get the required ViewModel through dependency injection
-        var createMatchViewModel =
-            Handler?.MauiContext?.Services?.GetService<CreateMatchViewModel>();
-        if (createMatchViewModel != null)
+        try
         {
-            // Navigate to new match setup page with the view model
-            await Navigation.PushAsync(new CreateNewMatchPage(createMatchViewModel));
+            // Use Shell navigation with registered route
+            await Shell.Current.GoToAsync("new-match");
         }
-        else
+        catch (Exception ex)
         {
-            // Handle the case where the ViewModel is not available
-            await DisplayAlert("Error", "Could not initialize the match creation page.", "OK");
+            await DisplayAlert("Error", $"An error occurred: {ex.Message}", "OK");
+            Console.WriteLine($"Error in OnStartNewMatch: {ex}");
         }
     }
 
     private async void OnConnectScoreboard(object sender, EventArgs e)
     {
-        // Navigate to bluetooth connection page
-        await Navigation.PushAsync(new BluetoothConnectionPage());
+        try
+        {
+            // Use Shell navigation with registered route
+            await Shell.Current.GoToAsync("bluetooth-connection");
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Error", $"An error occurred: {ex.Message}", "OK");
+            Console.WriteLine($"Error in OnConnectScoreboard: {ex}");
+        }
     }
 
-    protected override void OnAppearing()
+    protected override async void OnAppearing()
     {
         base.OnAppearing();
-        // Restart the WebSocket connection when returning to this page
-        _ = _viewModel.StartListeningAsync();
-        Console.WriteLine("MainPage appeared - restarting WebSocket connection");
+
+        try
+        {
+            // Notify ViewModel that view is appearing
+            await _viewModel.OnViewAppearing();
+            Console.WriteLine("MainPage appeared - notified ViewModel");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in OnAppearing: {ex}");
+        }
     }
 
-    protected override void OnDisappearing()
+    protected override async void OnDisappearing()
     {
         base.OnDisappearing();
-        // Clean up using the ViewModel
-        _ = _viewModel.CleanupAsync();
+
+        try
+        {
+            // Notify ViewModel that view is disappearing
+            await _viewModel.OnViewDisappearing();
+            Console.WriteLine("MainPage disappeared - notified ViewModel");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in OnDisappearing: {ex}");
+        }
     }
 }

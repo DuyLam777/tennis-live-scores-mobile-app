@@ -2,7 +2,7 @@ using System.Collections.ObjectModel;
 using System.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using TennisApp.Models; // Add this for CourtItem
+using TennisApp.Models;
 using TennisApp.Services;
 
 namespace TennisApp.ViewModels
@@ -23,15 +23,42 @@ namespace TennisApp.ViewModels
         [ObservableProperty]
         private bool isConnected = false;
 
+        [ObservableProperty]
+        private string debugText = "No courts loaded";
+
+        private bool _isViewActive = false;
+
         public MainPageViewModel(CourtAvailabilityService courtAvailabilityService)
         {
             _courtAvailabilityService = courtAvailabilityService;
+
             // Subscribe to court availability updates
             _courtAvailabilityService.CourtAvailabilityChanged += OnCourtAvailabilityChanged;
-            // Start listening for updates
-            _ = StartListeningAsync();
-            // Add debug message
-            Console.WriteLine("MainPageViewModel initialized and listening for court updates");
+
+            // Initialize with any last known courts
+            var initialCourts = _courtAvailabilityService.GetCurrentCourts();
+            if (initialCourts.Count > 0)
+            {
+                UpdateCourtsList(initialCourts);
+            }
+
+            Console.WriteLine("MainPageViewModel initialized");
+        }
+
+        // Called when the view appears
+        public async Task OnViewAppearing()
+        {
+            _isViewActive = true;
+            await StartListeningAsync();
+        }
+
+        // Called when the view disappears
+        public async Task OnViewDisappearing()
+        {
+            _isViewActive = false;
+            // We don't need an await here, but we need to do something async
+            // to satisfy the compiler warning
+            await Task.CompletedTask;
         }
 
         public async Task StartListeningAsync()
@@ -57,10 +84,21 @@ namespace TennisApp.ViewModels
             }
         }
 
-        [ObservableProperty]
-        private string debugText = "No courts loaded";
-
         private void OnCourtAvailabilityChanged(object? sender, List<CourtItem> courts)
+        {
+            // If the view is not active, don't update the UI
+            if (!_isViewActive)
+            {
+                Console.WriteLine(
+                    "Court update received but view is not active, skipping UI update"
+                );
+                return;
+            }
+
+            UpdateCourtsList(courts);
+        }
+
+        private void UpdateCourtsList(List<CourtItem> courts)
         {
             // Set up debug text
             var debug = new StringBuilder();
@@ -73,31 +111,40 @@ namespace TennisApp.ViewModels
 
             MainThread.InvokeOnMainThreadAsync(() =>
             {
-                // Clear and re-add items
-                AvailableCourts.Clear();
-                foreach (var court in courts)
+                try
                 {
-                    AvailableCourts.Add(court);
+                    // Clear and re-add items
+                    AvailableCourts.Clear();
+                    foreach (var court in courts)
+                    {
+                        AvailableCourts.Add(court);
+                    }
+
+                    // Update debug text
+                    DebugText = debug.ToString();
+                    Console.WriteLine(
+                        $"UI update completed. Collection has {AvailableCourts.Count} items."
+                    );
                 }
-
-                // Update debug text
-                DebugText = debug.ToString();
-
-                Console.WriteLine(
-                    $"UI update completed. Collection has {AvailableCourts.Count} items."
-                );
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error updating UI: {ex.Message}");
+                }
             });
         }
 
-        // Method to be called when we navigate away
+        // Clean up resources when the view model is being disposed
         public async Task CleanupAsync()
         {
-            Console.WriteLine("Cleaning up WebSocket connections...");
-            // Unsubscribe from events
+            Console.WriteLine("Cleaning up resources...");
+
+            // We'll unsubscribe from the event to prevent memory leaks
             _courtAvailabilityService.CourtAvailabilityChanged -= OnCourtAvailabilityChanged;
-            // Stop listening for updates
-            await _courtAvailabilityService.StopListeningForCourtUpdatesAsync();
-            Console.WriteLine("WebSocket cleanup completed");
+
+            // We need to await something to satisfy the compiler warning
+            await Task.CompletedTask;
+
+            Console.WriteLine("ViewModel cleanup completed");
         }
     }
 }
