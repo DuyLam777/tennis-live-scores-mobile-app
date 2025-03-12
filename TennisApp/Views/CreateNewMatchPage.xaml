@@ -5,84 +5,119 @@
              x:Class="TennisApp.Views.CreateNewMatchPage"
              Title="Create Match"
              BackgroundColor="{StaticResource Background}">
-    <ScrollView>
-        <VerticalStackLayout Padding="20">
-            <!-- Match Time -->
-            <Label Text="Match Time"
-                    Style="{StaticResource SectionHeader}"/>
-            <DatePicker
-                Date="{Binding MatchTime, Mode=TwoWay}"
-                Format="D"
-                Style="{StaticResource FormDatePicker}"
-                Margin="0,0,0,10"/>
-            <TimePicker
-                Time="{Binding MatchTime, Converter={StaticResource DateTimeToTimeSpanConverter}, Mode=TwoWay}"
-                Format="t"
-                Margin="0,0,0,20"/>
 
-            <!-- Court Selection -->
-            <Label Text="Select Court"
-                    Style="{StaticResource SectionHeader}"/>
-            <Picker
-                ItemsSource="{Binding AvailableCourts}"
-                ItemDisplayBinding="{Binding Name}"
-                SelectedItem="{Binding SelectedCourt}"
-                Title="Select a court"
-                Margin="0,0,0,20"/>
+    <Grid>
+        <!-- Main Content -->
+        <ScrollView>
+            <VerticalStackLayout Padding="20">
+                <!-- Match Time -->
+                <Label Text="Match Time"
+                       Style="{StaticResource SectionHeader}"/>
+                <DatePicker
+                    Date="{Binding MatchTime, Mode=TwoWay}"
+                    Format="D"
+                    Style="{StaticResource FormDatePicker}"
+                    Margin="0,0,0,10"/>
+                <TimePicker
+                    Time="{Binding MatchTime, Converter={StaticResource DateTimeToTimeSpanConverter}, Mode=TwoWay}"
+                    Format="t"
+                    Margin="0,0,0,20"/>
 
-            <!-- Player Selection -->
-            <Label Text="Select Players"
-                    Style="{StaticResource SectionHeader}"/>
-            <Grid ColumnDefinitions="*, *"
-                    RowDefinitions="Auto, Auto"
-                    Margin="0,0,0,20">
-                <Label Text="Player 1"
+                <!-- Court Selection -->
+                <Label Text="Select Court"
+                       Style="{StaticResource SectionHeader}"/>
+                <Picker
+                    ItemsSource="{Binding AvailableCourts}"
+                    ItemDisplayBinding="{Binding Name}"
+                    SelectedItem="{Binding SelectedCourt}"
+                    Title="Select a court"
+                    Margin="0,0,0,20"/>
+
+                <!-- Player Selection -->
+                <Label Text="Select Players"
+                       Style="{StaticResource SectionHeader}"/>
+                <Grid ColumnDefinitions="*, *"
+                      RowDefinitions="Auto, Auto"
+                      Margin="0,0,0,20">
+                    <Label Text="Player 1"
+                           Grid.Column="0"
+                           Grid.Row="0"
+                           TextColor="{StaticResource Gray300}"/>
+                    <Picker
+                        ItemsSource="{Binding AvailablePlayers}"
+                        ItemDisplayBinding="{Binding Name}"
+                        SelectedItem="{Binding SelectedPlayer1}"
+                        Title="Select player 1"
                         Grid.Column="0"
-                        Grid.Row="0"/>
-                <Picker
-                    ItemsSource="{Binding AvailablePlayers}"
-                    ItemDisplayBinding="{Binding Name}"
-                    SelectedItem="{Binding SelectedPlayer1}"
-                    Title="Select player 1"
-                    Grid.Column="0"
                         Grid.Row="1"
-                    Margin="0,0,5,0"/>
+                        Margin="0,0,5,0"/>
 
-                <Label Text="Player 2"
+                    <Label Text="Player 2"
+                           Grid.Column="1"
+                           Grid.Row="0"
+                           TextColor="{StaticResource Gray300}"/>
+                    <Picker
+                        ItemsSource="{Binding AvailablePlayers}"
+                        ItemDisplayBinding="{Binding Name}"
+                        SelectedItem="{Binding SelectedPlayer2}"
+                        Title="Select player 2"
                         Grid.Column="1"
-                        Grid.Row="0"/>
-                <Picker
-                    ItemsSource="{Binding AvailablePlayers}"
-                    ItemDisplayBinding="{Binding Name}"
-                    SelectedItem="{Binding SelectedPlayer2}"
-                    Title="Select player 2"
-                    Grid.Column="1"
                         Grid.Row="1"
-                    Margin="5,0,0,0"/>
-            </Grid>
+                        Margin="5,0,0,0"/>
+                </Grid>
 
-            <!-- Scoreboard Selection -->
-            <Label Text="Select Scoreboard"
-                    Style="{StaticResource SectionHeader}"/>
-            <Picker
-                ItemsSource="{Binding AvailableScoreboards}"
-                ItemDisplayBinding="{Binding DisplayName}"
-                SelectedItem="{Binding SelectedScoreboard}"
-                Title="Select a scoreboard"
-                Margin="0,0,0,20"/>
+                <!-- Scoreboard Selection -->
+                <Label Text="Select Scoreboard"
+                       Style="{StaticResource SectionHeader}"/>
+                <Picker
+                    ItemsSource="{Binding AvailableScoreboards}"
+                    ItemDisplayBinding="{Binding DisplayName}"
+                    SelectedItem="{Binding SelectedScoreboard}"
+                    Title="Select a scoreboard"
+                    Margin="0,0,0,20"/>
 
-            <!-- Error Message -->
-            <Label
-                Text="{Binding ErrorMessage}"
-                TextColor="{StaticResource Error}"
-                IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToVisibilityConverter}}"
-                Margin="0,0,0,20"/>
+                <!-- Error Message -->
+                <Label
+                    Text="{Binding ErrorMessage}"
+                    TextColor="{StaticResource Error}"
+                    IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToVisibilityConverter}}"
+                    Margin="0,0,0,20"/>
 
-            <!-- Submit Button -->
-            <Button
-                Text="Create Match"
-                Style="{StaticResource PrimaryButton}"
-                Command="{Binding CreateMatchCommand}"/>
-        </VerticalStackLayout>
-    </ScrollView>
+                <!-- Submit Button -->
+                <Button
+                    Text="Create Match"
+                    Style="{StaticResource PrimaryButton}"
+                    Command="{Binding CreateMatchCommand}"
+                    IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBooleanConverter}}"/>
+
+                <!-- Refresh Button -->
+                <Button
+                    Text="Refresh Data"
+                    Style="{StaticResource SecondaryButton}"
+                    Command="{Binding LoadDataCommand}"
+                    IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBooleanConverter}}"
+                    Margin="0,10,0,0"/>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Loading Overlay -->
+        <Grid
+            BackgroundColor="#80000000"
+            IsVisible="{Binding IsLoading}">
+            <VerticalStackLayout
+                VerticalOptions="Center"
+                HorizontalOptions="Center"
+                Spacing="10">
+                <ActivityIndicator
+                    IsRunning="{Binding IsLoading}"
+                    Color="{StaticResource Primary}"
+                    HeightRequest="50"
+                    WidthRequest="50"/>
+                <Label
+                    Text="{Binding LoadingMessage}"
+                    TextColor="{StaticResource White}"
+                    HorizontalOptions="Center"/>
+            </VerticalStackLayout>
+        </Grid>
+    </Grid>
 </ContentPage>

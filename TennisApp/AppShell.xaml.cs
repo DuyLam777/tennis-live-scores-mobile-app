@@ -8,6 +8,8 @@ public partial class AppShell : Shell
     {
         InitializeComponent();
 
-        // Routing.RegisterRoute(nameof(BluetoothConnectionPage), typeof(BluetoothConnectionPage));
+        Routing.RegisterRoute("new-match", typeof(CreateNewMatchPage));
+        Routing.RegisterRoute("bluetooth-connection", typeof(BluetoothConnectionPage));
+        Routing.RegisterRoute("websocket-test", typeof(WebSocketPage));
     }
 }

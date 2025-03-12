@@ -1,40 +1,157 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<ContentPage 
+<ContentPage
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     x:Class="TennisApp.MainPage"
-    BackgroundColor="{StaticResource Background}">
+    Title="Tennis Live Scores">
 
     <ScrollView>
-        <VerticalStackLayout
-            Padding="30,0"
-            Spacing="25"
-            BackgroundColor="{StaticResource Surface}">
+        <VerticalStackLayout Spacing="25"
+                             Padding="20">
+            <!-- Header -->
+            <VerticalStackLayout BackgroundColor="{StaticResource Surface}"
+                                 Padding="20">
 
-            <!-- Image -->
-            <Image
-                Source="dotnet_bot.png"
-                HeightRequest="185"
-                Aspect="AspectFit"
-                BackgroundColor="{StaticResource Overlay}" />
+                <Label
+                    Text="Tennis Live Scores"
+                    Style="{StaticResource Headline}"
+                    HorizontalOptions="Center"
+                    Margin="0,0,0,10"/>
 
-            <!-- Headline -->
-            <Label
-                Text="Hello, World!"
-                Style="{StaticResource Headline}" />
+                <Label
+                    Text="Track your tennis matches in real-time"
+                    Style="{StaticResource SubHeadline}"
+                    HorizontalOptions="Center"
+                    Margin="0,0,0,20"/>
+            </VerticalStackLayout>
 
-            <!-- Subheadline -->
-            <Label
-                Text="Welcome to &#10;.NET Multi-platform App UI"
-                Style="{StaticResource SubHeadline}" />
+            <!-- Quick Actions -->
+            <Grid BackgroundColor="{StaticResource Surface}"
+                  Padding="15">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
 
-            <!-- Button -->
-            <Button
-                x:Name="CounterBtn"
-                Text="Click me"
-                Style="{StaticResource PrimaryButton}"
-                Clicked="OnCounterClicked"
-                HorizontalOptions="Fill" />
+                <Label
+                    Grid.Row="0"
+                    Text="Match Actions"
+                    Style="{StaticResource SectionHeader}"/>
+
+                <Grid Grid.Row="1"
+                      ColumnDefinitions="*,*"
+                      ColumnSpacing="15"
+                      Margin="0,15,0,0">
+                    <Button
+                        Grid.Column="0"
+                        Text="Start New Match"
+                        FontSize="16"
+                        Style="{StaticResource PrimaryButton}"
+                        Clicked="OnStartNewMatch"
+                        HeightRequest="100"/>
+
+                    <Button
+                        Grid.Column="1"
+                        Text="Connect Scoreboard"
+                        FontSize="16"
+                        Style="{StaticResource PrimaryButton}"
+                        Clicked="OnConnectScoreboard"
+                        HeightRequest="100"/>
+                </Grid>
+            </Grid>
+
+            <!-- Court Availability -->
+            <Grid BackgroundColor="{StaticResource Surface}"
+                  Padding="15">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Replace StackLayout with Grid for the header section -->
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Label
+                        Grid.Column="0"
+                        Text="Court Availability"
+                        Style="{StaticResource SectionHeader}"
+                        VerticalOptions="Center"/>
+
+                    <!-- Connection Indicator -->
+                    <Border
+                        Grid.Column="2"
+                        WidthRequest="15"
+                        HeightRequest="15"
+                        BackgroundColor="{Binding IsConnected, Converter={StaticResource BooleanToColorConverter}, ConverterParameter='{StaticResource Success},{StaticResource Danger}'}"
+                        StrokeShape="RoundRectangle 10,10,10,10"
+                        VerticalOptions="Center"
+                        HorizontalOptions="End"
+                        Margin="10,0,0,0"/>
+
+                    <!-- Activity Indicator -->
+                    <ActivityIndicator
+                        Grid.Column="3"
+                        IsRunning="{Binding IsLoading}"
+                        IsVisible="{Binding IsLoading}"
+                        VerticalOptions="Center"
+                        HorizontalOptions="End"
+                        Margin="10,0,0,0"/>
+                </Grid>
+
+                <!-- Error Message -->
+                <Label
+                    Grid.Row="1"
+                    Text="{Binding ErrorMessage}"
+                    IsVisible="{Binding ErrorMessage, Converter={StaticResource StringNotEmptyConverter}}"
+                    TextColor="{StaticResource Danger}"
+                    Margin="0,5,0,0"/>
+
+                <CollectionView
+                    Grid.Row="2"
+                    ItemsSource="{Binding AvailableCourts}"
+                    HeightRequest="120"
+                    Margin="0,15,0,0">
+
+                    <CollectionView.ItemsLayout>
+                        <LinearItemsLayout Orientation="Horizontal"
+                                           ItemSpacing="10"/>
+                    </CollectionView.ItemsLayout>
+
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid
+                                WidthRequest="100"
+                                HeightRequest="100">
+                                <Ellipse
+                                    Fill="{Binding IsAvailable, Converter={StaticResource BooleanToColorConverter}, ConverterParameter='{StaticResource Success},{StaticResource Danger}'}"
+                                    WidthRequest="100"
+                                    HeightRequest="100"/>
+                                <VerticalStackLayout
+                                    HorizontalOptions="Center"
+                                    VerticalOptions="Center">
+                                    <Label
+                                        Text="{Binding Name}"
+                                        TextColor="{StaticResource White}"
+                                        FontAttributes="Bold"
+                                        HorizontalOptions="Center"/>
+                                    <Label
+                                        Text="{Binding IsAvailable, Converter={StaticResource BoolToStringConverter}, ConverterParameter='Available,In Use'}"
+                                        TextColor="{StaticResource White}"
+                                        FontSize="12"
+                                        HorizontalOptions="Center"/>
+                                </VerticalStackLayout>
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </Grid>
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

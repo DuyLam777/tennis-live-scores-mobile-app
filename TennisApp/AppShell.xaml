@@ -12,7 +12,7 @@
     <!-- Define a FlyoutHeader -->
     <Shell.FlyoutHeader>
         <Grid HeightRequest="100"
-                BackgroundColor="{StaticResource Surface}">
+              BackgroundColor="{StaticResource Surface}">
             <Label Text="Tennis App"
                    FontSize="24"
                    TextColor="{StaticResource White}"
@@ -21,25 +21,24 @@
         </Grid>
     </Shell.FlyoutHeader>
 
-    <!-- Flyout Menu Items -->
+    <!-- IMPORTANT: Use UNIQUE route names that don't clash with registered routes -->
     <ShellContent Title="Home"
-            Icon="home_button.svg"
-            ContentTemplate="{DataTemplate root:MainPage}"
-            Route="MainPage"/>
+                  Icon="home_button.svg"
+                  ContentTemplate="{DataTemplate root:MainPage}"
+                  Route="home"/>
 
     <ShellContent Title="Bluetooth"
-            Icon="bluetooth_icon.svg"
-            ContentTemplate="{DataTemplate views:BluetoothConnectionPage}"
-            Route="Bluetooth"/>
-
-    <ShellContent Title="WebSocket"
-            Icon="websocket_icon.svg"
-            ContentTemplate="{DataTemplate views:WebSocketPage}"
-            Route="WebSocket"/>
+                  Icon="bluetooth_icon.svg"
+                  ContentTemplate="{DataTemplate views:BluetoothConnectionPage}"
+                  Route="bluetooth"/>
 
     <ShellContent Title="Create Match"
-            Icon="create_new_match.svg"
-            ContentTemplate="{DataTemplate views:CreateNewMatchPage}"
-            Route="CreateMatch"/>
+                  Icon="create_new_match.svg"
+                  ContentTemplate="{DataTemplate views:CreateNewMatchPage}"
+                  Route="create-match"/>
 
+    <ShellContent Title="WebSocket ONLY FOR TESTING"
+                  Icon="websocket_icon.svg"
+                  ContentTemplate="{DataTemplate views:WebSocketPage}"
+                  Route="websocket"/>
 </Shell>
