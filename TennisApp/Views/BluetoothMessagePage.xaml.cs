@@ -157,10 +157,13 @@ namespace TennisApp.Views
         // Updates the scoreboard UI (score labels)
         private void UpdateScoreDisplay()
         {
-            Player1SetsLabel.Text = $"{player1Sets}";
-            Player2SetsLabel.Text = $"{player2Sets}";
-            Player1GamesLabel.Text = $"{player1Games}";
-            Player2GamesLabel.Text = $"{player2Games}";
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                Player1SetsLabel.Text = $"{player1Sets}";
+                Player2SetsLabel.Text = $"{player2Sets}";
+                Player1GamesLabel.Text = $"{player1Games}";
+                Player2GamesLabel.Text = $"{player2Games}";
+            });
         }
 
         // Process the complete Bluetooth message and update/send only if score has changed.
@@ -222,6 +225,7 @@ namespace TennisApp.Views
                         try
                         {
                             await _webSocketService.SendAsync(modifiedMessage);
+                            Console.WriteLine(modifiedMessage);
                         }
                         catch (Exception ex)
                         {
