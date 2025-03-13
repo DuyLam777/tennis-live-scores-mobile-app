@@ -1,7 +1,9 @@
 using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using Microsoft.Maui.Graphics;
+using TennisApp.Utils;
 
 namespace TennisApp.ViewModels
 {
@@ -17,10 +19,10 @@ namespace TennisApp.ViewModels
         public WebSocketViewModel()
         {
             // Set default values first
-            _primaryButtonColor = Colors.Purple;
+            _primaryButtonColor = Colors.RoyalBlue;
             _secondaryButtonColor = Colors.Gray;
 
-            // Try to load resources, but don't crash if they're not available yet
+            // Load resource colors using the static helper
             LoadResourceColors();
 
             // Set initial state
@@ -82,24 +84,13 @@ namespace TennisApp.ViewModels
             }
         }
 
-        // Helper method to safely load resources
+        // Helper method to load resource colors using the static ColorHelpers class
         private void LoadResourceColors()
         {
             try
             {
-                if (Application.Current?.Resources != null)
-                {
-                    // Try to get colors, with proper null checking and type checking
-                    if (TryGetResourceColor("Primary", out var primaryColor))
-                    {
-                        _primaryButtonColor = primaryColor;
-                    }
-
-                    if (TryGetResourceColor("Gray600", out var gray600Color))
-                    {
-                        _secondaryButtonColor = gray600Color;
-                    }
-                }
+                _primaryButtonColor = ColorHelpers.GetResourceColor("Primary");
+                _secondaryButtonColor = ColorHelpers.GetResourceColor("Gray600");
             }
             catch (Exception ex)
             {
@@ -109,42 +100,13 @@ namespace TennisApp.ViewModels
             }
         }
 
-        // Helper method to safely get a color from resources
-        private bool TryGetResourceColor(string resourceKey, out Color color)
-        {
-            color = Colors.Transparent; // Default value
-
-            if (Application.Current?.Resources == null)
-                return false;
-
-            // First try to get the color directly
-            if (Application.Current.Resources.TryGetValue(resourceKey, out var resourceValue))
-            {
-                if (resourceValue is Color directColor)
-                {
-                    color = directColor;
-                    return true;
-                }
-
-                // If not a direct color, check if it's a brush
-                if (resourceValue is SolidColorBrush brush)
-                {
-                    color = brush.Color;
-                    return true;
-                }
-            }
-
-            // If we get here, we couldn't get the color
-            return false;
-        }
-
         // Methods to update state
         public void SetConnectedState()
         {
             ConnectionStatus = "Connected!";
 
             // Try to get Success color, fall back to Green if not available
-            if (TryGetResourceColor("Success", out var successColor))
+            if (ColorHelpers.TryGetResourceColor("Success", out var successColor))
                 ButtonColor = successColor;
             else
                 ButtonColor = Colors.Green;
@@ -152,7 +114,7 @@ namespace TennisApp.ViewModels
             IsSendMessageEnabled = true;
 
             // Try to get Primary color, fall back to Blue if not available
-            if (TryGetResourceColor("Primary", out var primaryColor))
+            if (ColorHelpers.TryGetResourceColor("Primary", out var primaryColor))
                 SendMessageButtonColor = primaryColor;
             else
                 SendMessageButtonColor = Colors.Blue;
@@ -163,7 +125,7 @@ namespace TennisApp.ViewModels
             ConnectionStatus = "Not connected";
 
             // Try to get Danger color, fall back to Red if not available
-            if (TryGetResourceColor("Danger", out var dangerColor))
+            if (ColorHelpers.TryGetResourceColor("Danger", out var dangerColor))
                 ButtonColor = dangerColor;
             else
                 ButtonColor = Colors.Red;
@@ -171,7 +133,7 @@ namespace TennisApp.ViewModels
             IsSendMessageEnabled = false;
 
             // Try to get Gray600 color, fall back to Gray if not available
-            if (TryGetResourceColor("Gray600", out var grayColor))
+            if (ColorHelpers.TryGetResourceColor("Gray600", out var grayColor))
                 SendMessageButtonColor = grayColor;
             else
                 SendMessageButtonColor = Colors.Gray;

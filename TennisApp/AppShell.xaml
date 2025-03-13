@@ -37,6 +37,12 @@
                   ContentTemplate="{DataTemplate views:CreateNewMatchPage}"
                   Route="create-match"/>
 
+    <ShellContent Title="Enter Live Score"
+                  Icon="create_new_match.svg"
+                  ContentTemplate="{DataTemplate views:EnterLiveScorePage}"
+                  Route="EnterLiveScore"/>
+
+
     <ShellContent Title="WebSocket ONLY FOR TESTING"
                   Icon="websocket_icon.svg"
                   ContentTemplate="{DataTemplate views:WebSocketPage}"
