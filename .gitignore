@@ -383,3 +383,8 @@ snapshots-diff/
 temp
 .packages
 /src/Templates/.tempTemplateOutput
+
+#.config from vscode
+.config
+#.vscode can be gitignored now
+.vscode
