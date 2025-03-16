@@ -55,7 +55,7 @@ namespace TennisApp.Views
                 {
                     // Build the message. For example:
                     // "match id here,Set,11,Games,11,11,10,10,10,00"
-                    string message = $"match id here,Set,{player1Sets}{player2Sets},Games,";
+                    string message = $"1,Set,{player1Sets}{player2Sets},Games,";
                     for (int i = 1; i <= 6; i++)
                     {
                         string segment;

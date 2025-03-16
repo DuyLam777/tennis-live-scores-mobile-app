@@ -4,7 +4,8 @@
         {
             "name": ".NET MAUI",
             "type": "maui",
-            "request": "launch"
+            "request": "launch",
+            "device": "R5CT20RGEGY"
         }
     ]
 }
