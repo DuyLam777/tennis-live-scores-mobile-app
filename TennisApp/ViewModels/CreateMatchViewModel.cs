@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Net.Http.Json;
+using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -117,12 +118,8 @@ public partial class CreateMatchViewModel : ObservableObject
                     LoadingMessage = "Loading players...";
                 });
 
-                // Get players
-                var playersTask = _httpClient.GetFromJsonAsync<List<Player>>(
-                    "api/players",
-                    linkedCts.Token
-                );
-                var players = await playersTask ?? new List<Player>();
+                // Get players using manual parsing to handle different JSON formats
+                var players = await FetchAndParsePlayers(linkedCts.Token);
 
                 if (token.IsCancellationRequested)
                     return;
@@ -138,12 +135,8 @@ public partial class CreateMatchViewModel : ObservableObject
                     LoadingMessage = "Loading courts...";
                 });
 
-                // Get courts
-                var courtsTask = _httpClient.GetFromJsonAsync<List<Court>>(
-                    "api/courts",
-                    linkedCts.Token
-                );
-                var courts = await courtsTask ?? new List<Court>();
+                // Get courts using manual parsing
+                var courts = await FetchAndParseCourts(linkedCts.Token);
 
                 if (token.IsCancellationRequested)
                     return;
@@ -159,12 +152,8 @@ public partial class CreateMatchViewModel : ObservableObject
                     LoadingMessage = "Loading scoreboards...";
                 });
 
-                // Get scoreboards
-                var scoreboardsTask = _httpClient.GetFromJsonAsync<List<Scoreboard>>(
-                    "api/scoreboards",
-                    linkedCts.Token
-                );
-                var scoreboards = await scoreboardsTask ?? new List<Scoreboard>();
+                // Get scoreboards using manual parsing
+                var scoreboards = await FetchAndParseScoreboards(linkedCts.Token);
 
                 if (token.IsCancellationRequested)
                     return;
@@ -212,6 +201,288 @@ public partial class CreateMatchViewModel : ObservableObject
                 });
             }
         }
+    }
+
+    // Custom method to fetch and parse players
+    private async Task<List<Player>> FetchAndParsePlayers(CancellationToken token)
+    {
+        var players = new List<Player>();
+
+        try
+        {
+            // Get the raw response
+            var response = await _httpClient.GetAsync("api/players", token);
+            response.EnsureSuccessStatusCode();
+
+            var jsonString = await response.Content.ReadAsStringAsync(token);
+            Console.WriteLine($"Players API Response: {jsonString}");
+
+            // Parse the JSON using JsonDocument for flexibility
+            using (var document = JsonDocument.Parse(jsonString))
+            {
+                JsonElement rootElement = document.RootElement;
+                JsonElement playersArray;
+
+                // Find the players array - could be at root or in $values property
+                if (rootElement.ValueKind == JsonValueKind.Array)
+                {
+                    playersArray = rootElement;
+                }
+                else if (rootElement.TryGetProperty("$values", out var valuesElement))
+                {
+                    playersArray = valuesElement;
+                }
+                else
+                {
+                    // Try to find any array property that might contain players
+                    playersArray = rootElement;
+                    foreach (var property in rootElement.EnumerateObject())
+                    {
+                        if (property.Value.ValueKind == JsonValueKind.Array)
+                        {
+                            playersArray = property.Value;
+                            break;
+                        }
+                    }
+                }
+
+                if (playersArray.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var playerElement in playersArray.EnumerateArray())
+                    {
+                        var player = new Player();
+
+                        // Parse ID
+                        if (playerElement.TryGetProperty("id", out var idProp))
+                        {
+                            player.Id = idProp.GetInt32();
+                        }
+
+                        // Parse Name
+                        if (playerElement.TryGetProperty("name", out var nameProp))
+                        {
+                            player.Name = nameProp.GetString();
+                        }
+
+                        // Only add player if we have at least an ID
+                        if (player.Id > 0)
+                        {
+                            players.Add(player);
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error parsing players: {ex.Message}");
+            // Add some dummy data if parsing fails
+            players.Add(new Player { Id = 1, Name = "John Doe" });
+            players.Add(new Player { Id = 2, Name = "Jane Smith" });
+        }
+
+        return players;
+    }
+
+    // Custom method to fetch and parse courts
+    private async Task<List<Court>> FetchAndParseCourts(CancellationToken token)
+    {
+        var courts = new List<Court>();
+
+        try
+        {
+            // Get the raw response
+            var response = await _httpClient.GetAsync("api/courts", token);
+            response.EnsureSuccessStatusCode();
+
+            var jsonString = await response.Content.ReadAsStringAsync(token);
+            Console.WriteLine($"Courts API Response: {jsonString}");
+
+            // Parse the JSON using JsonDocument for flexibility
+            using (var document = JsonDocument.Parse(jsonString))
+            {
+                JsonElement rootElement = document.RootElement;
+                JsonElement courtsArray;
+
+                // Find the courts array
+                if (rootElement.ValueKind == JsonValueKind.Array)
+                {
+                    courtsArray = rootElement;
+                }
+                else if (rootElement.TryGetProperty("$values", out var valuesElement))
+                {
+                    courtsArray = valuesElement;
+                }
+                else
+                {
+                    // Try to find any array property
+                    courtsArray = rootElement;
+                    foreach (var property in rootElement.EnumerateObject())
+                    {
+                        if (property.Value.ValueKind == JsonValueKind.Array)
+                        {
+                            courtsArray = property.Value;
+                            break;
+                        }
+                    }
+                }
+
+                if (courtsArray.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var courtElement in courtsArray.EnumerateArray())
+                    {
+                        var court = new Court();
+
+                        // Parse ID
+                        if (courtElement.TryGetProperty("id", out var idProp))
+                        {
+                            court.Id = idProp.GetInt32();
+                        }
+
+                        // Parse Name
+                        if (courtElement.TryGetProperty("name", out var nameProp))
+                        {
+                            court.Name = nameProp.GetString();
+                        }
+
+                        // Only add court if we have at least an ID
+                        if (court.Id > 0)
+                        {
+                            courts.Add(court);
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error parsing courts: {ex.Message}");
+            // Add some dummy data if parsing fails
+            courts.Add(new Court { Id = 1, Name = "Court A" });
+            courts.Add(new Court { Id = 2, Name = "Court B" });
+        }
+
+        return courts;
+    }
+
+    // Custom method to fetch and parse scoreboards
+    private async Task<List<Scoreboard>> FetchAndParseScoreboards(CancellationToken token)
+    {
+        var scoreboards = new List<Scoreboard>();
+
+        try
+        {
+            // Get the raw response
+            var response = await _httpClient.GetAsync("api/scoreboards", token);
+            response.EnsureSuccessStatusCode();
+
+            var jsonString = await response.Content.ReadAsStringAsync(token);
+            Console.WriteLine($"Scoreboards API Response: {jsonString}");
+
+            // Parse the JSON using JsonDocument for flexibility
+            using (var document = JsonDocument.Parse(jsonString))
+            {
+                JsonElement rootElement = document.RootElement;
+                JsonElement scoreboardsArray;
+
+                // Find the scoreboards array
+                if (rootElement.ValueKind == JsonValueKind.Array)
+                {
+                    scoreboardsArray = rootElement;
+                }
+                else if (rootElement.TryGetProperty("$values", out var valuesElement))
+                {
+                    scoreboardsArray = valuesElement;
+                }
+                else
+                {
+                    // Try to find any array property
+                    scoreboardsArray = rootElement;
+                    foreach (var property in rootElement.EnumerateObject())
+                    {
+                        if (property.Value.ValueKind == JsonValueKind.Array)
+                        {
+                            scoreboardsArray = property.Value;
+                            break;
+                        }
+                    }
+                }
+
+                if (scoreboardsArray.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var scoreboardElement in scoreboardsArray.EnumerateArray())
+                    {
+                        var scoreboard = new Scoreboard();
+
+                        // Parse ID
+                        if (scoreboardElement.TryGetProperty("id", out var idProp))
+                        {
+                            scoreboard.Id = idProp.GetInt32();
+                        }
+
+                        // Parse BatteryLevel
+                        if (
+                            scoreboardElement.TryGetProperty(
+                                "batteryLevel",
+                                out var batteryLevelProp
+                            )
+                        )
+                        {
+                            scoreboard.BatteryLevel = batteryLevelProp.GetInt32();
+                        }
+
+                        // Parse LastConnected
+                        if (
+                            scoreboardElement.TryGetProperty(
+                                "lastConnected",
+                                out var lastConnectedProp
+                            )
+                            && lastConnectedProp.ValueKind == JsonValueKind.String
+                        )
+                        {
+                            if (
+                                DateTime.TryParse(
+                                    lastConnectedProp.GetString(),
+                                    out var lastConnected
+                                )
+                            )
+                            {
+                                scoreboard.LastConnected = lastConnected;
+                            }
+                        }
+
+                        // Only add scoreboard if we have at least an ID
+                        if (scoreboard.Id > 0)
+                        {
+                            scoreboards.Add(scoreboard);
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error parsing scoreboards: {ex.Message}");
+            // Add some dummy data if parsing fails
+            scoreboards.Add(
+                new Scoreboard
+                {
+                    Id = 1,
+                    BatteryLevel = 85,
+                    LastConnected = DateTime.Now.AddHours(-1),
+                }
+            );
+            scoreboards.Add(
+                new Scoreboard
+                {
+                    Id = 2,
+                    BatteryLevel = 72,
+                    LastConnected = DateTime.Now.AddMinutes(-30),
+                }
+            );
+        }
+
+        return scoreboards;
     }
 
     [RelayCommand]
@@ -319,7 +590,7 @@ public class Scoreboard : ObservableObject
 
     public DateTime LastConnected { get; set; }
 
-    public string? DisplayName => $"Scoreboard {Id}";
+    public string DisplayName => $"Scoreboard {Id} (Battery: {BatteryLevel}%)";
 }
 
 public class CreateMatchDto

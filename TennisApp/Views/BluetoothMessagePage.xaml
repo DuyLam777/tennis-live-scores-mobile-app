@@ -8,6 +8,13 @@
     <ScrollView>
         <VerticalStackLayout Padding="20"
                              Spacing="20">
+            <!-- Match Title -->
+            <Label x:Name="MatchTitleLabel"
+                   Style="{StaticResource SubHeadline}"
+                   HorizontalOptions="Center"
+                   FontAttributes="Bold"
+                   TextColor="{StaticResource Primary}"/>
+
             <!-- Connect/Disconnect Button -->
             <Button
                 x:Name="btnStart"
@@ -95,9 +102,14 @@
             </Grid>
 
             <!-- Messages Log -->
+            <Label Text="Received Bluetooth Messages"
+                   Style="{StaticResource SubHeadline}"
+                   HorizontalOptions="Center"/>
+
             <CollectionView
                 x:Name="messagesList"
-                BackgroundColor="{StaticResource Background}">
+                BackgroundColor="{StaticResource Background}"
+                HeightRequest="200">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
                         <Frame
@@ -126,6 +138,12 @@
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
+
+            <!-- Back Button -->
+            <Button
+                Text="Back"
+                Style="{StaticResource SecondaryButton}"
+                Clicked="BackButton_Clicked"/>
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

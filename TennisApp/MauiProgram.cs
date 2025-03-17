@@ -47,11 +47,14 @@ public static class MauiProgram
         // Register ViewModels
         builder.Services.AddTransient<CreateMatchViewModel>();
         builder.Services.AddSingleton<MainPageViewModel>();
+        builder.Services.AddTransient<SelectMatchViewModel>();
 
         // Register Pages
         builder.Services.AddTransient<CreateNewMatchPage>();
         builder.Services.AddTransient<MainPage>();
         builder.Services.AddTransient<BluetoothConnectionPage>();
+        builder.Services.AddTransient<EnterLiveScorePage>();
+        builder.Services.AddTransient<SelectMatchPage>();
 
         // Register app shell
         builder.Services.AddSingleton<AppShell>();

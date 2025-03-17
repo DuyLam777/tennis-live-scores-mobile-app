@@ -46,6 +46,7 @@
                         Grid.Column="0"
                         Text="Start New Match"
                         FontSize="16"
+                        TextColor="{StaticResource Overlay}"
                         Style="{StaticResource PrimaryButton}"
                         Clicked="OnStartNewMatch"
                         HeightRequest="100"/>
@@ -54,6 +55,7 @@
                         Grid.Column="1"
                         Text="Connect Scoreboard"
                         FontSize="16"
+                        TextColor="{StaticResource Overlay}"
                         Style="{StaticResource PrimaryButton}"
                         Clicked="OnConnectScoreboard"
                         HeightRequest="100"/>
@@ -138,12 +140,12 @@
                                     VerticalOptions="Center">
                                     <Label
                                         Text="{Binding Name}"
-                                        TextColor="{StaticResource White}"
+                                        TextColor="{StaticResource Overlay}"
                                         FontAttributes="Bold"
                                         HorizontalOptions="Center"/>
                                     <Label
                                         Text="{Binding IsAvailable, Converter={StaticResource BoolToStringConverter}, ConverterParameter='Available,In Use'}"
-                                        TextColor="{StaticResource White}"
+                                        TextColor="{StaticResource Overlay}"
                                         FontSize="12"
                                         HorizontalOptions="Center"/>
                                 </VerticalStackLayout>

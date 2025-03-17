@@ -6,12 +6,18 @@ using Plugin.BLE.Abstractions.Contracts;
 
 namespace TennisApp.Views
 {
+    [QueryProperty(nameof(MatchId), "MatchId")]
+    [QueryProperty(nameof(MatchTitle), "MatchTitle")]
     public partial class BluetoothConnectionPage : ContentPage, INotifyPropertyChanged
     {
         private IAdapter _adapter;
         private ObservableCollection<IDevice> _devices;
         private IDevice? _selectedDevice;
         private IDevice? _connectedDevice;
+
+        // Match information
+        private int _matchId;
+        private string _matchTitle = string.Empty;
 
         public IDevice? SelectedDevice
         {
@@ -21,6 +27,27 @@ namespace TennisApp.Views
                 _selectedDevice = value;
                 OnPropertyChanged();
                 btnConnect.IsEnabled = _selectedDevice != null;
+            }
+        }
+
+        public int MatchId
+        {
+            get => _matchId;
+            set
+            {
+                _matchId = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string MatchTitle
+        {
+            get => _matchTitle;
+            set
+            {
+                _matchTitle = value;
+                OnPropertyChanged();
+                UpdatePageTitle();
             }
         }
 
@@ -35,6 +62,15 @@ namespace TennisApp.Views
 
             btnConnect.IsEnabled = false;
             btnDisconnect.IsEnabled = false;
+        }
+
+        private void UpdatePageTitle()
+        {
+            if (!string.IsNullOrEmpty(MatchTitle))
+            {
+                Title = $"Connect Scoreboard: {MatchTitle}";
+                MatchTitleLabel.Text = MatchTitle;
+            }
         }
 
         private async Task<bool> EnsurePermissions()
@@ -149,7 +185,14 @@ namespace TennisApp.Views
                 await _adapter.ConnectToDeviceAsync(SelectedDevice);
                 _connectedDevice = SelectedDevice;
 
-                await Navigation.PushAsync(new BluetoothMessagePage(_connectedDevice));
+                // Pass match information to BluetoothMessagePage
+                var page = new BluetoothMessagePage(_connectedDevice)
+                {
+                    MatchId = MatchId,
+                    MatchTitle = MatchTitle,
+                };
+
+                await Navigation.PushAsync(page);
 
                 btnConnect.Text = "Connect";
                 btnConnect.IsEnabled = true;
@@ -191,6 +234,11 @@ namespace TennisApp.Views
                 btnDisconnect.IsEnabled = true;
                 await DisplayAlert("Error", $"Disconnection failed: {ex.Message}", "OK");
             }
+        }
+
+        private async void btnBack_Clicked(object sender, EventArgs e)
+        {
+            await Shell.Current.GoToAsync("..");
         }
 
         protected override void OnAppearing()

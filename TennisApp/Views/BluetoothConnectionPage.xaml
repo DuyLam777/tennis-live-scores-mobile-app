@@ -9,18 +9,33 @@
     <Grid RowDefinitions="Auto,Auto,*,Auto"
           Padding="20">
         <!-- Title -->
-        <Label
-            Grid.Row="0"
-            Text="Bluetooth Devices"
-            Style="{StaticResource Headline}"
-            HorizontalOptions="Center"
-            Margin="0,0,0,20"/>
+        <VerticalStackLayout Grid.Row="0"
+                Spacing="10">
+            <Label
+                Text="Bluetooth Devices"
+                Style="{StaticResource Headline}"
+                HorizontalOptions="Center"/>
+
+            <!-- Match Title -->
+            <Label x:Name="MatchTitleLabel"
+                   Style="{StaticResource SubHeadline}"
+                   HorizontalOptions="Center"
+                   FontAttributes="Bold"
+                   TextColor="{StaticResource Primary}"/>
+
+            <Label
+                Text="Select a device to connect to the scoreboard"
+                Style="{StaticResource SubHeadline}"
+                HorizontalOptions="Center"
+                Margin="0,0,0,10"/>
+        </VerticalStackLayout>
 
         <!-- Scan Button -->
         <Button
             Grid.Row="1"
             x:Name="btnScan"
             Text="Scan for Devices"
+            TextColor="{StaticResource Overlay}"
             Style="{StaticResource PrimaryButton}"
             Clicked="btnScan_Clicked"
             Margin="0,0,0,20"/>
@@ -93,21 +108,36 @@
         <!-- Action Buttons -->
         <Grid
             Grid.Row="3"
-            ColumnDefinitions="*,*"
-            ColumnSpacing="10">
+            RowDefinitions="Auto,Auto"
+            RowSpacing="10">
+
+            <Grid ColumnDefinitions="*,*"
+                  ColumnSpacing="10"
+                  Grid.Row="0">
+                <Button
+                    x:Name="btnDisconnect"
+                    Text="Disconnect"
+                    Style="{StaticResource SecondaryButton}"
+                    IsEnabled="False"
+                    Clicked="btnDisconnect_Clicked"/>
+
+                <Button
+                    x:Name="btnConnect"
+                    Text="Connect"
+                    TextColor="{StaticResource Overlay}"
+                    Style="{StaticResource PrimaryButton}"
+                    IsEnabled="False"
+                    Clicked="btnConnect_Clicked"
+                    Grid.Column="1"/>
+            </Grid>
+
+            <!-- Back Button -->
             <Button
-                x:Name="btnDisconnect"
-                Text="Disconnect"
+                Grid.Row="1"
+                Text="Back"
                 Style="{StaticResource SecondaryButton}"
-                IsEnabled="False"
-                Clicked="btnDisconnect_Clicked"/>
-            <Button
-                x:Name="btnConnect"
-                Text="Connect"
-                Style="{StaticResource PrimaryButton}"
-                IsEnabled="False"
-                Clicked="btnConnect_Clicked"
-                Grid.Column="1"/>
+                Clicked="btnBack_Clicked"
+                Margin="0,10,0,0"/>
         </Grid>
     </Grid>
 </ContentPage>

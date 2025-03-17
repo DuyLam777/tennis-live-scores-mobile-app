@@ -86,6 +86,7 @@
                 <!-- Submit Button -->
                 <Button
                     Text="Create Match"
+                    TextColor="{StaticResource Overlay}"
                     Style="{StaticResource PrimaryButton}"
                     Command="{Binding CreateMatchCommand}"
                     IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBooleanConverter}}"/>
@@ -102,7 +103,7 @@
 
         <!-- Loading Overlay -->
         <Grid
-            BackgroundColor="#80000000"
+            BackgroundColor="{StaticResource Background}"
             IsVisible="{Binding IsLoading}">
             <VerticalStackLayout
                 VerticalOptions="Center"

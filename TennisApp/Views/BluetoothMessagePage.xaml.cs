@@ -1,17 +1,18 @@
-using System;
-using System.Text;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Maui.Controls;
 using Plugin.BLE.Abstractions.Contracts;
 using TennisApp.Config;
 using TennisApp.Services;
 using TennisApp.Utils;
-using Microsoft.Maui.Controls;
-using System.Collections.ObjectModel;
 
 namespace TennisApp.Views
 {
+    [QueryProperty(nameof(MatchId), "MatchId")]
+    [QueryProperty(nameof(MatchTitle), "MatchTitle")]
     public partial class BluetoothMessagePage : ContentPage
     {
         private IDevice _connectedDevice;
@@ -30,13 +31,40 @@ namespace TennisApp.Views
 
         private StringBuilder _messageBuffer = new StringBuilder();
 
+        // Match information
+        private int _matchId;
+        private string _matchTitle = string.Empty;
+
         // Custom service and characteristic UUIDs for the HM-10 module
         private static readonly string Hm10ServiceUuid = "0000FFE0-0000-1000-8000-00805F9B34FB";
-        private static readonly string Hm10WriteCharacteristicUuid = "0000FFE1-0000-1000-8000-00805F9B34FB";
-        private static readonly string Hm10NotifyCharacteristicUuid = "0000FFE1-0000-1000-8000-00805F9B34FB";
+        private static readonly string Hm10WriteCharacteristicUuid =
+            "0000FFE1-0000-1000-8000-00805F9B34FB";
+        private static readonly string Hm10NotifyCharacteristicUuid =
+            "0000FFE1-0000-1000-8000-00805F9B34FB";
 
         // Store the default button color (set after InitializeComponent)
         private Color _defaultButtonColor;
+
+        public int MatchId
+        {
+            get => _matchId;
+            set
+            {
+                _matchId = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string MatchTitle
+        {
+            get => _matchTitle;
+            set
+            {
+                _matchTitle = value;
+                OnPropertyChanged();
+                UpdateMatchDisplay();
+            }
+        }
 
         public BluetoothMessagePage(IDevice connectedDevice)
         {
@@ -47,6 +75,15 @@ namespace TennisApp.Views
             messagesList.ItemsSource = _messages;
             messagesList.Scrolled += MessagesList_Scrolled;
             DiscoverServicesAndCharacteristicsAsync();
+        }
+
+        private void UpdateMatchDisplay()
+        {
+            if (!string.IsNullOrEmpty(MatchTitle))
+            {
+                Title = $"Scoreboard: {MatchTitle}";
+                MatchTitleLabel.Text = MatchTitle;
+            }
         }
 
         private void MessagesList_Scrolled(object? sender, ItemsViewScrolledEventArgs e)
@@ -65,7 +102,6 @@ namespace TennisApp.Views
                 _isWebSocketConnected = false;
                 btnStart.Text = "Connect";
                 btnStart.BackgroundColor = ColorHelpers.GetResourceColor("Primary");
-                await DisplayAlert("Disconnected", "WebSocket disconnected", "OK");
                 InsertNewMessage("WebSocket disconnected");
             }
             else
@@ -79,12 +115,11 @@ namespace TennisApp.Views
                     _isWebSocketConnected = true;
                     btnStart.Text = "Disconnect";
                     btnStart.BackgroundColor = ColorHelpers.GetResourceColor("Danger");
-                    await DisplayAlert("Connected", "WebSocket connected successfully", "OK");
                     InsertNewMessage("WebSocket connected");
                 }
                 catch (Exception ex)
                 {
-                    await DisplayAlert("Error", $"WebSocket connection failed: {ex.Message}", "OK");
+                    InsertNewMessage($"WebSocket connection failed: {ex.Message}");
                 }
             }
         }
@@ -96,23 +131,42 @@ namespace TennisApp.Views
                 var services = await _connectedDevice.GetServicesAsync();
                 foreach (var service in services)
                 {
-                    if (service.Id.ToString().Equals(Hm10ServiceUuid, StringComparison.OrdinalIgnoreCase))
+                    if (
+                        service
+                            .Id.ToString()
+                            .Equals(Hm10ServiceUuid, StringComparison.OrdinalIgnoreCase)
+                    )
                     {
                         Console.WriteLine("HM-10 Service Found");
                         var characteristics = await service.GetCharacteristicsAsync();
                         foreach (var characteristic in characteristics)
                         {
-                            if (characteristic.Id.ToString().Equals(Hm10WriteCharacteristicUuid, StringComparison.OrdinalIgnoreCase) && characteristic.CanWrite)
+                            if (
+                                characteristic
+                                    .Id.ToString()
+                                    .Equals(
+                                        Hm10WriteCharacteristicUuid,
+                                        StringComparison.OrdinalIgnoreCase
+                                    ) && characteristic.CanWrite
+                            )
                             {
                                 _writeCharacteristic = characteristic;
                                 Console.WriteLine("Writable HM-10 Characteristic Found");
                             }
-                            if (characteristic.Id.ToString().Equals(Hm10NotifyCharacteristicUuid, StringComparison.OrdinalIgnoreCase) && characteristic.CanUpdate)
+                            if (
+                                characteristic
+                                    .Id.ToString()
+                                    .Equals(
+                                        Hm10NotifyCharacteristicUuid,
+                                        StringComparison.OrdinalIgnoreCase
+                                    ) && characteristic.CanUpdate
+                            )
                             {
                                 _notifyCharacteristic = characteristic;
                                 Console.WriteLine("Notification HM-10 Characteristic Found");
                                 await _notifyCharacteristic.StartUpdatesAsync();
-                                _notifyCharacteristic.ValueUpdated += NotifyCharacteristic_ValueUpdated;
+                                _notifyCharacteristic.ValueUpdated +=
+                                    NotifyCharacteristic_ValueUpdated;
                             }
                         }
                     }
@@ -123,16 +177,19 @@ namespace TennisApp.Views
                 }
                 if (_writeCharacteristic == null || _notifyCharacteristic == null)
                 {
-                    await DisplayAlert("Error", "Required characteristics not found.", "OK");
+                    InsertNewMessage("Required characteristics not found.");
                 }
             }
             catch (Exception ex)
             {
-                await DisplayAlert("Error", $"Failed to discover services/characteristics: {ex.Message}", "OK");
+                InsertNewMessage($"Failed to discover services: {ex.Message}");
             }
         }
 
-        private async void NotifyCharacteristic_ValueUpdated(object? sender, Plugin.BLE.Abstractions.EventArgs.CharacteristicUpdatedEventArgs e)
+        private async void NotifyCharacteristic_ValueUpdated(
+            object? sender,
+            Plugin.BLE.Abstractions.EventArgs.CharacteristicUpdatedEventArgs e
+        )
         {
             string fragment = Encoding.UTF8.GetString(e.Characteristic.Value);
             _messageBuffer.Append(fragment);
@@ -197,16 +254,20 @@ namespace TennisApp.Views
                     {
                         if (parts[i].Length >= 2)
                         {
-                            if (parts[i][0] == '1') newPlayer1Games++;
-                            if (parts[i][1] == '1') newPlayer2Games++;
+                            if (parts[i][0] == '1')
+                                newPlayer1Games++;
+                            if (parts[i][1] == '1')
+                                newPlayer2Games++;
                         }
                     }
 
                     // Only update and send if the score has changed.
-                    if (newPlayer1Sets == player1Sets &&
-                        newPlayer2Sets == player2Sets &&
-                        newPlayer1Games == player1Games &&
-                        newPlayer2Games == player2Games)
+                    if (
+                        newPlayer1Sets == player1Sets
+                        && newPlayer2Sets == player2Sets
+                        && newPlayer1Games == player1Games
+                        && newPlayer2Games == player2Games
+                    )
                     {
                         return;
                     }
@@ -218,8 +279,8 @@ namespace TennisApp.Views
                     player2Games = newPlayer2Games;
                     UpdateScoreDisplay();
 
-                    // Build the message (adding your match id prefix)
-                    string modifiedMessage = "match id here," + trimmedMessage;
+                    // Build the message including match ID
+                    string modifiedMessage = $"{MatchId}," + trimmedMessage;
                     if (_isWebSocketConnected && _webSocketService != null)
                     {
                         try
@@ -246,6 +307,11 @@ namespace TennisApp.Views
             }
         }
 
+        private async void BackButton_Clicked(object sender, EventArgs e)
+        {
+            await Shell.Current.GoToAsync("..");
+        }
+
         // Helper to insert a new message into the CollectionView
         private void InsertNewMessage(string text)
         {
@@ -254,11 +320,14 @@ namespace TennisApp.Views
                 var newMessage = new Message { Text = text, IsNew = true };
                 _messages.Insert(0, newMessage);
                 messagesList.ScrollTo(newMessage, position: ScrollToPosition.Start);
-                Dispatcher.StartTimer(TimeSpan.FromSeconds(2), () =>
-                {
-                    newMessage.IsNew = false;
-                    return false;
-                });
+                Dispatcher.StartTimer(
+                    TimeSpan.FromSeconds(2),
+                    () =>
+                    {
+                        newMessage.IsNew = false;
+                        return false;
+                    }
+                );
             });
         }
 
@@ -310,6 +379,7 @@ namespace TennisApp.Views
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
+
         protected void OnPropertyChanged(string propertyName) =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }

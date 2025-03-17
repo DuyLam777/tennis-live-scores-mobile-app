@@ -1,10 +1,12 @@
 using System;
-using TennisApp.Services;
-using Microsoft.Maui.Controls;
 using TennisApp.Config;
+using TennisApp.Services;
+using TennisApp.Utils;
 
 namespace TennisApp.Views
 {
+    [QueryProperty(nameof(MatchId), "MatchId")]
+    [QueryProperty(nameof(MatchTitle), "MatchTitle")]
     public partial class EnterLiveScorePage : ContentPage
     {
         private int player1Sets = 0;
@@ -14,12 +16,44 @@ namespace TennisApp.Views
 
         private WebSocketService? _webSocketService;
         private bool _isWebSocketConnected = false;
+        private int _matchId;
+        private string _matchTitle = string.Empty;
+
+        public int MatchId
+        {
+            get => _matchId;
+            set
+            {
+                _matchId = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string MatchTitle
+        {
+            get => _matchTitle;
+            set
+            {
+                _matchTitle = value;
+                OnPropertyChanged();
+                UpdatePageTitle();
+            }
+        }
 
         public EnterLiveScorePage()
         {
             InitializeComponent();
             UpdateScoreDisplay();
             ConnectWebSocket();
+        }
+
+        private void UpdatePageTitle()
+        {
+            if (!string.IsNullOrEmpty(MatchTitle))
+            {
+                Title = $"Score: {MatchTitle}";
+                MatchTitleLabel.Text = MatchTitle;
+            }
         }
 
         private async void ConnectWebSocket()
@@ -30,11 +64,13 @@ namespace TennisApp.Views
                 string webSocketUrl = AppConfig.GetWebSocketUrl();
                 await _webSocketService.ConnectAsync(webSocketUrl);
                 _isWebSocketConnected = true;
-                await DisplayAlert("Connected", "WebSocket connected successfully", "OK");
+                ConnectionStatusLabel.Text = "Connected to server";
+                ConnectionStatusLabel.TextColor = ColorHelpers.GetResourceColor("Success");
             }
             catch (Exception ex)
             {
-                await DisplayAlert("Error", $"WebSocket connection failed: {ex.Message}", "OK");
+                ConnectionStatusLabel.Text = $"Connection error: {ex.Message}";
+                ConnectionStatusLabel.TextColor = ColorHelpers.GetResourceColor("Danger");
             }
         }
 
@@ -53,9 +89,9 @@ namespace TennisApp.Views
             {
                 try
                 {
-                    // Build the message. For example:
-                    // "match id here,Set,11,Games,11,11,10,10,10,00"
-                    string message = $"1,Set,{player1Sets}{player2Sets},Games,";
+                    // Build the message with match ID
+                    // Format: "matchId,Set,XY,Games,11,11,10,10,10,00"
+                    string message = $"{MatchId},Set,{player1Sets}{player2Sets},Games,";
                     for (int i = 1; i <= 6; i++)
                     {
                         string segment;
@@ -78,11 +114,19 @@ namespace TennisApp.Views
                         message += segment + (i < 6 ? "," : "");
                     }
                     await _webSocketService.SendAsync(message);
+                    LastActionLabel.Text = "Score sent to server";
+                    LastActionLabel.TextColor = ColorHelpers.GetResourceColor("Success");
                 }
                 catch (Exception ex)
                 {
-                    await DisplayAlert("Error", $"Failed to send score: {ex.Message}", "OK");
+                    LastActionLabel.Text = $"Error: {ex.Message}";
+                    LastActionLabel.TextColor = ColorHelpers.GetResourceColor("Danger");
                 }
+            }
+            else
+            {
+                LastActionLabel.Text = "Not connected to server";
+                LastActionLabel.TextColor = ColorHelpers.GetResourceColor("Warning");
             }
         }
 
@@ -139,6 +183,11 @@ namespace TennisApp.Views
             SendScore();
         }
 
+        private async void BackButton_Clicked(object sender, EventArgs e)
+        {
+            await Shell.Current.GoToAsync("..");
+        }
+
         // Override OnDisappearing to close the WebSocket connection
         protected override async void OnDisappearing()
         {
@@ -152,7 +201,7 @@ namespace TennisApp.Views
                 }
                 catch (Exception ex)
                 {
-                    await DisplayAlert("Error", $"Error closing WebSocket: {ex.Message}", "OK");
+                    Console.WriteLine($"Error closing WebSocket: {ex.Message}");
                 }
             }
         }

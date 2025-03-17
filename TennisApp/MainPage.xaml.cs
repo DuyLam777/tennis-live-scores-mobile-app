@@ -19,7 +19,7 @@ public partial class MainPage : ContentPage
     {
         try
         {
-            // Use Shell navigation with registered route
+            // Navigate to create match page
             await Shell.Current.GoToAsync("new-match");
         }
         catch (Exception ex)
@@ -33,8 +33,8 @@ public partial class MainPage : ContentPage
     {
         try
         {
-            // Use Shell navigation with registered route
-            await Shell.Current.GoToAsync("bluetooth-connection");
+            // Navigate to match selection page instead of directly to bluetooth
+            await Shell.Current.GoToAsync("select-match");
         }
         catch (Exception ex)
         {

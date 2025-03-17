@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:viewModels="clr-namespace:TennisApp.ViewModels"
+    x:Class="TennisApp.Views.SelectMatchPage"
+    Title="Select Match"
+    BackgroundColor="{StaticResource Background}">
+
+    <Grid>
+        <!-- Main Content -->
+        <Grid RowDefinitions="Auto,Auto,*,Auto"
+              Padding="20"
+              RowSpacing="15">
+
+            <!-- Header -->
+            <VerticalStackLayout Grid.Row="0"
+                                 Spacing="10">
+                <Label Text="Select a Match"
+                       Style="{StaticResource Headline}"
+                       HorizontalOptions="Center"/>
+                <Label Text="Choose a match to track scores"
+                       Style="{StaticResource SubHeadline}"
+                       HorizontalOptions="Center"/>
+            </VerticalStackLayout>
+
+            <!-- Search Bar -->
+            <Grid Grid.Row="1"
+                    ColumnDefinitions="*,Auto">
+                <Border BackgroundColor="{StaticResource Surface}"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 20"
+                        Grid.Column="0">
+                    <Grid ColumnDefinitions="Auto,*,Auto"
+                            Padding="10,0">
+                        <!-- Search Icon -->
+                        <Image Source="search_icon.png"
+                               WidthRequest="20"
+                               HeightRequest="20"
+                               VerticalOptions="Center"
+                               Margin="5,0,0,0"
+                               IsVisible="False"/>
+                        <!-- Hide if you don't have an icon -->
+
+                        <!-- Search Entry -->
+                        <Entry Grid.Column="1"
+                               Placeholder="Search by player name"
+                               Text="{Binding SearchText}"
+                               TextColor="{StaticResource White}"
+                               PlaceholderColor="{StaticResource Gray500}"
+                               BackgroundColor="Transparent"
+                               VerticalOptions="Center"
+                               Margin="10,0"/>
+
+                        <!-- Clear Search Button -->
+                        <Button Grid.Column="2"
+                                Text="✕"
+                                Command="{Binding ClearSearchCommand}"
+                                IsVisible="{Binding SearchText, Converter={StaticResource StringToVisibilityConverter}}"
+                                BackgroundColor="Transparent"
+                                TextColor="{StaticResource Gray300}"
+                                WidthRequest="40"
+                                HeightRequest="40"
+                                Padding="0"
+                                VerticalOptions="Center"
+                                HorizontalOptions="End"/>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- Match List -->
+            <RefreshView Grid.Row="2"
+                         Command="{Binding RefreshCommand}"
+                         IsRefreshing="{Binding IsRefreshing}">
+                <CollectionView ItemsSource="{Binding Matches}"
+                                SelectionMode="Single"
+                                SelectedItem="{Binding SelectedMatch}"
+                                EmptyView="No matches available. Pull down to refresh.">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <!-- Outer Border for selection highlight -->
+                            <Border Margin="0,5"
+                                    BackgroundColor="{StaticResource Surface}"
+                                    StrokeThickness="0"
+                                    StrokeShape="RoundRectangle 20,20,20,20"
+                                    Padding="3">
+
+                                <!-- Add VisualStateManager for selection styling -->
+                                <VisualStateManager.VisualStateGroups>
+                                    <VisualStateGroup Name="CommonStates">
+                                        <VisualState Name="Normal">
+                                            <VisualState.Setters>
+                                                <Setter Property="BackgroundColor"
+                                                        Value="{StaticResource Surface}"/>
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                        <VisualState Name="Selected">
+                                            <VisualState.Setters>
+                                                <Setter Property="BackgroundColor"
+                                                        Value="{StaticResource Primary}"/>
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                    </VisualStateGroup>
+                                </VisualStateManager.VisualStateGroups>
+
+                                <!-- Inner Border for content with rounded corners -->
+                                <Border BackgroundColor="{StaticResource Background}"
+                                        StrokeThickness="0"
+                                        StrokeShape="RoundRectangle 16,16,16,16"
+                                        Padding="10">
+                                    <Grid ColumnDefinitions="*,Auto"
+                                          RowDefinitions="Auto,Auto,Auto">
+                                        <!-- Match Time -->
+                                        <Label Grid.Row="0"
+                                               Grid.Column="0"
+                                               Text="{Binding MatchTime, StringFormat='{0:g}'}"
+                                               TextColor="{StaticResource Primary}"
+                                               FontSize="14"/>
+
+                                        <!-- Court Name -->
+                                        <Label Grid.Row="0"
+                                               Grid.Column="1"
+                                               Text="{Binding CourtName}"
+                                               HorizontalOptions="End"
+                                               TextColor="{StaticResource Gray300}"
+                                               FontSize="14"/>
+
+                                        <!-- Players -->
+                                        <Label Grid.Row="1"
+                                               Grid.Column="0"
+                                               Grid.ColumnSpan="2"
+                                               Text="{Binding DisplayName}"
+                                               TextColor="{StaticResource White}"
+                                               FontSize="18"
+                                               FontAttributes="Bold"
+                                               Margin="0,5"/>
+
+                                        <!-- Selection Indicator -->
+                                        <Label Grid.Row="2"
+                                               Grid.Column="0"
+                                               Grid.ColumnSpan="2"
+                                               Text="Tap to select"
+                                               TextColor="{StaticResource Gray500}"
+                                               FontSize="14"
+                                               HorizontalOptions="Center"/>
+                                    </Grid>
+                                </Border>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </RefreshView>
+
+            <!-- Action Buttons -->
+            <Grid Grid.Row="3"
+                  RowDefinitions="Auto,Auto"
+                  RowSpacing="10">
+                <!-- Error Message -->
+                <Label Grid.Row="0"
+                       Text="{Binding ErrorMessage}"
+                       TextColor="{StaticResource Error}"
+                       IsVisible="{Binding ErrorMessage, Converter={StaticResource StringToVisibilityConverter}}"
+                       HorizontalOptions="Center"/>
+
+                <!-- Selection Buttons -->
+                <VerticalStackLayout Grid.Row="1"
+                                     Spacing="10">
+                    <Button Text="Enter Scores Manually"
+                            Command="{Binding EnterScoresManuallyCommand}"
+                            IsEnabled="{Binding IsMatchSelected}"
+                            TextColor="{StaticResource Overlay}"
+                            Style="{StaticResource PrimaryButton}"/>
+
+                    <Button Text="Connect to Scoreboard"
+                            Command="{Binding ConnectToScoreboardCommand}"
+                            IsEnabled="{Binding IsMatchSelected}"
+                            TextColor="{StaticResource Overlay}"
+                            Style="{StaticResource PrimaryButton}"/>
+
+                    <Button Text="Back"
+                            Command="{Binding GoBackCommand}"
+                            Style="{StaticResource SecondaryButton}"
+                            Margin="0,10,0,0"/>
+                </VerticalStackLayout>
+            </Grid>
+        </Grid>
+
+        <!-- Loading Overlay -->
+        <Grid BackgroundColor="{StaticResource Background}"
+              IsVisible="{Binding IsLoading}">
+            <VerticalStackLayout VerticalOptions="Center"
+                                 HorizontalOptions="Center"
+                                 Spacing="10">
+                <ActivityIndicator IsRunning="{Binding IsLoading}"
+                                   Color="{StaticResource Primary}"
+                                   HeightRequest="50"
+                                   WidthRequest="50"/>
+                <Label Text="{Binding LoadingMessage}"
+                       TextColor="{StaticResource White}"
+                       HorizontalOptions="Center"/>
+            </VerticalStackLayout>
+        </Grid>
+    </Grid>
+</ContentPage>
