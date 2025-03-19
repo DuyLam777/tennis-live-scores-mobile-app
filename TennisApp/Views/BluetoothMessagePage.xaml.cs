@@ -112,10 +112,14 @@ namespace TennisApp.Views
                     string webSocketUrl = AppConfig.GetWebSocketUrl();
                     Console.WriteLine($"Connecting to WebSocket server at {webSocketUrl}...");
                     await _webSocketService.ConnectAsync(webSocketUrl);
+                    
+                    // Subscribe to the live_score topic
+                    await _webSocketService.SubscribeToTopicAsync("live_score");
+                    
                     _isWebSocketConnected = true;
                     btnStart.Text = "Disconnect";
                     btnStart.BackgroundColor = ColorHelpers.GetResourceColor("Danger");
-                    InsertNewMessage("WebSocket connected");
+                    InsertNewMessage("WebSocket connected and subscribed to live_score topic");
                 }
                 catch (Exception ex)
                 {
@@ -285,8 +289,9 @@ namespace TennisApp.Views
                     {
                         try
                         {
-                            await _webSocketService.SendAsync(modifiedMessage);
-                            Console.WriteLine(modifiedMessage);
+                            // Send to live_score topic instead of direct message
+                            await _webSocketService.SendMessageToTopicAsync("live_score", modifiedMessage);
+                            Console.WriteLine($"Score sent to live_score topic: {modifiedMessage}");
                         }
                         catch (Exception ex)
                         {

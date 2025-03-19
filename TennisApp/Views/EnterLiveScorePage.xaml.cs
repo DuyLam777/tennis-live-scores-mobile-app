@@ -7,7 +7,7 @@ namespace TennisApp.Views
 {
     [QueryProperty(nameof(MatchId), "MatchId")]
     [QueryProperty(nameof(MatchTitle), "MatchTitle")]
-    public partial class EnterLiveScorePage : ContentPage
+    public partial class EnterLiveScorePage : ContentPage, IDisposable
     {
         private int player1Sets = 0;
         private int player2Sets = 0;
@@ -18,6 +18,7 @@ namespace TennisApp.Views
         private bool _isWebSocketConnected = false;
         private int _matchId;
         private string _matchTitle = string.Empty;
+        private bool _disposed = false;
 
         public int MatchId
         {
@@ -63,6 +64,10 @@ namespace TennisApp.Views
                 _webSocketService = new WebSocketService();
                 string webSocketUrl = AppConfig.GetWebSocketUrl();
                 await _webSocketService.ConnectAsync(webSocketUrl);
+                
+                // Subscribe to the live_score topic
+                await _webSocketService.SubscribeToTopicAsync("live_score");
+                
                 _isWebSocketConnected = true;
                 ConnectionStatusLabel.Text = "Connected to server";
                 ConnectionStatusLabel.TextColor = ColorHelpers.GetResourceColor("Success");
@@ -113,7 +118,10 @@ namespace TennisApp.Views
                         }
                         message += segment + (i < 6 ? "," : "");
                     }
-                    await _webSocketService.SendAsync(message);
+                    
+                    // Send to live_score topic instead of direct message
+                    await _webSocketService.SendMessageToTopicAsync("live_score", message);
+                    
                     LastActionLabel.Text = "Score sent to server";
                     LastActionLabel.TextColor = ColorHelpers.GetResourceColor("Success");
                 }
@@ -192,7 +200,12 @@ namespace TennisApp.Views
         protected override async void OnDisappearing()
         {
             base.OnDisappearing();
-            if (_webSocketService != null)
+            await CloseWebSocketConnection();
+        }
+        
+        private async Task CloseWebSocketConnection()
+        {
+            if (_webSocketService != null && _isWebSocketConnected)
             {
                 try
                 {
@@ -204,6 +217,35 @@ namespace TennisApp.Views
                     Console.WriteLine($"Error closing WebSocket: {ex.Message}");
                 }
             }
+        }
+
+        // IDisposable implementation
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+
+            if (disposing)
+            {
+                // Dispose WebSocketService
+                if (_webSocketService is IDisposable disposable)
+                {
+                    disposable.Dispose();
+                    _webSocketService = null;
+                }
+            }
+
+            _disposed = true;
+        }
+
+        ~EnterLiveScorePage()
+        {
+            Dispose(false);
         }
     }
 }

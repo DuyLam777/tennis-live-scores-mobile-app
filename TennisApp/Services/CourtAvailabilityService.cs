@@ -165,6 +165,21 @@ namespace TennisApp.Services
                     // Receive message from WebSocket
                     string message = await _webSocketService.ReceiveAsync();
 
+                    // Skip empty messages or connection closed notifications
+                    if (string.IsNullOrEmpty(message) || message == "Connection closed")
+                    {
+                        if (message == "Connection closed")
+                        {
+                            Console.WriteLine("WebSocket connection closed, attempting to reconnect...");
+                            await ReconnectAsync();
+                            break; // Exit the loop and let the reconnect handle restarting
+                        }
+                        
+                        // Empty message, just skip and continue listening
+                        Console.WriteLine("Received empty message, skipping processing");
+                        continue;
+                    }
+
                     // Process the message
                     ProcessCourtUpdateMessage(message);
                 }
@@ -182,7 +197,7 @@ namespace TennisApp.Services
                 if (!cancellationToken.IsCancellationRequested)
                 {
                     await Task.Delay(5000, CancellationToken.None);
-                    _ = Task.Run(async () => await ReconnectAsync());
+                    await ReconnectAsync();
                 }
             }
             finally
@@ -223,26 +238,56 @@ namespace TennisApp.Services
         {
             try
             {
-                // Parse the WebSocket message
-                var messageObj = JsonSerializer.Deserialize<WebSocketMessage>(message);
+                // Check for empty or invalid message
+                if (string.IsNullOrWhiteSpace(message))
+                {
+                    Console.WriteLine("Empty message received, skipping processing");
+                    return;
+                }
+                
+                // Validate JSON structure
+                if (!message.TrimStart().StartsWith("{") && !message.TrimStart().StartsWith("["))
+                {
+                    Console.WriteLine($"Received non-JSON message: {message}");
+                    return;
+                }
+                
+                // Parse the WebSocket message with improved error handling
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true,
+                    AllowTrailingCommas = true,
+                    ReadCommentHandling = JsonCommentHandling.Skip,
+                };
+                
+                WebSocketMessage? messageObj = null;
+                try
+                {
+                    messageObj = JsonSerializer.Deserialize<WebSocketMessage>(message, options);
+                }
+                catch (JsonException ex)
+                {
+                    Console.WriteLine($"Error parsing message as WebSocketMessage: {ex.Message}");
+                    Console.WriteLine($"Invalid message content: {message}");
+                    return;
+                }
 
                 if (messageObj?.Type == "court_availability" && messageObj.Data != null)
                 {
-                    Console.WriteLine($"Raw data: {messageObj.Data.ToString()}");
-
-                    // Use specific options for deserializing courts
-                    var options = new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true,
-                        AllowTrailingCommas = true,
-                        ReadCommentHandling = JsonCommentHandling.Skip,
-                    };
+                    string dataStr = messageObj.Data.ToString() ?? "[]";
+                    Console.WriteLine($"Raw data: {dataStr}");
 
                     // Parse the courts data
-                    var courts = JsonSerializer.Deserialize<List<CourtItem>>(
-                        messageObj.Data.ToString() ?? "[]",
-                        options
-                    );
+                    List<CourtItem> courts;
+                    try
+                    {
+                        courts = JsonSerializer.Deserialize<List<CourtItem>>(dataStr, options) ?? new List<CourtItem>();
+                    }
+                    catch (JsonException ex)
+                    {
+                        Console.WriteLine($"Error parsing court data: {ex.Message}");
+                        return;
+                    }
 
                     if (courts != null)
                     {
