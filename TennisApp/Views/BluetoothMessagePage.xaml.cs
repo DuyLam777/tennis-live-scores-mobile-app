@@ -95,11 +95,7 @@ namespace TennisApp.Views
         {
             if (_isWebSocketConnected)
             {
-                if (_webSocketService != null)
-                {
-                    await _webSocketService.CloseAsync();
-                }
-                _isWebSocketConnected = false;
+                await CloseWebSocketConnection();
                 btnStart.Text = "Connect";
                 btnStart.BackgroundColor = ColorHelpers.GetResourceColor("Primary");
                 InsertNewMessage("WebSocket disconnected");
@@ -108,22 +104,44 @@ namespace TennisApp.Views
             {
                 try
                 {
-                    _webSocketService = new WebSocketService();
-                    string webSocketUrl = AppConfig.GetWebSocketUrl();
-                    Console.WriteLine($"Connecting to WebSocket server at {webSocketUrl}...");
-                    await _webSocketService.ConnectAsync(webSocketUrl);
-                    
-                    // Subscribe to the live_score topic
-                    await _webSocketService.SubscribeToTopicAsync("live_score");
-                    
-                    _isWebSocketConnected = true;
+                    await ConnectWebSocket();
                     btnStart.Text = "Disconnect";
                     btnStart.BackgroundColor = ColorHelpers.GetResourceColor("Danger");
-                    InsertNewMessage("WebSocket connected and subscribed to live_score topic");
                 }
                 catch (Exception ex)
                 {
                     InsertNewMessage($"WebSocket connection failed: {ex.Message}");
+                }
+            }
+        }
+
+        private async Task ConnectWebSocket()
+        {
+            _webSocketService = new WebSocketService();
+            string webSocketUrl = AppConfig.GetWebSocketUrl();
+            Console.WriteLine($"Connecting to WebSocket server at {webSocketUrl}...");
+            await _webSocketService.ConnectAsync(webSocketUrl);
+            
+            // Subscribe to the live_score topic
+            await _webSocketService.SubscribeToTopicAsync("live_score");
+            
+            _isWebSocketConnected = true;
+            InsertNewMessage("WebSocket connected and subscribed to live_score topic");
+        }
+
+        private async Task CloseWebSocketConnection()
+        {
+            if (_webSocketService != null && _isWebSocketConnected)
+            {
+                try
+                {
+                    await _webSocketService.CloseAsync();
+                    _isWebSocketConnected = false;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error closing WebSocket: {ex.Message}");
+                    InsertNewMessage($"Error closing WebSocket: {ex.Message}");
                 }
             }
         }
@@ -283,22 +301,8 @@ namespace TennisApp.Views
                     player2Games = newPlayer2Games;
                     UpdateScoreDisplay();
 
-                    // Build the message including match ID
-                    string modifiedMessage = $"{MatchId}," + trimmedMessage;
-                    if (_isWebSocketConnected && _webSocketService != null)
-                    {
-                        try
-                        {
-                            // Send to live_score topic instead of direct message
-                            await _webSocketService.SendMessageToTopicAsync("live_score", modifiedMessage);
-                            Console.WriteLine($"Score sent to live_score topic: {modifiedMessage}");
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"Error sending via WebSocket: {ex.Message}");
-                        }
-                    }
-                    InsertNewMessage(modifiedMessage);
+                    // Send the score to the WebSocket
+                    await SendScoreToWebSocket(trimmedMessage);
                 }
                 catch (Exception ex)
                 {
@@ -309,6 +313,60 @@ namespace TennisApp.Views
             {
                 // If not a score message, simply log it.
                 InsertNewMessage(trimmedMessage);
+            }
+        }
+
+        private async Task SendScoreToWebSocket(string scoreMessage)
+        {
+            if (_isWebSocketConnected && _webSocketService != null)
+            {
+                try
+                {
+                    // Build the message including match ID
+                    string modifiedMessage = $"{MatchId},{scoreMessage}";
+                    
+                    // Send to live_score topic
+                    await _webSocketService.SendMessageToTopicAsync("live_score", modifiedMessage);
+                    Console.WriteLine($"Score sent to live_score topic: {modifiedMessage}");
+                    InsertNewMessage($"Score sent: {modifiedMessage}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error sending via WebSocket: {ex.Message}");
+                    InsertNewMessage($"Error sending score: {ex.Message}");
+                    
+                    // Try to reconnect if the connection was lost
+                    if (!_isWebSocketConnected)
+                    {
+                        try
+                        {
+                            await ConnectWebSocket();
+                            // Try sending again after reconnection
+                            await _webSocketService.SendMessageToTopicAsync("live_score", $"{MatchId},{scoreMessage}");
+                            InsertNewMessage("Reconnected and sent score");
+                        }
+                        catch (Exception reconnectEx)
+                        {
+                            InsertNewMessage($"Failed to reconnect: {reconnectEx.Message}");
+                        }
+                    }
+                }
+            }
+            else
+            {
+                InsertNewMessage("Not connected to WebSocket server");
+                // Try to auto-connect
+                try
+                {
+                    await ConnectWebSocket();
+                    // If connection successful, send the score
+                    await _webSocketService.SendMessageToTopicAsync("live_score", $"{MatchId},{scoreMessage}");
+                    InsertNewMessage("Auto-connected and sent score");
+                }
+                catch (Exception connectEx)
+                {
+                    InsertNewMessage($"Auto-connection failed: {connectEx.Message}");
+                }
             }
         }
 
@@ -344,11 +402,7 @@ namespace TennisApp.Views
                 await _notifyCharacteristic.StopUpdatesAsync();
                 _notifyCharacteristic.ValueUpdated -= NotifyCharacteristic_ValueUpdated;
             }
-            if (_webSocketService != null && _isWebSocketConnected)
-            {
-                await _webSocketService.CloseAsync();
-                _isWebSocketConnected = false;
-            }
+            await CloseWebSocketConnection();
         }
     }
 
