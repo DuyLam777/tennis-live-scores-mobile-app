@@ -121,10 +121,10 @@ namespace TennisApp.Views
             string webSocketUrl = AppConfig.GetWebSocketUrl();
             Console.WriteLine($"Connecting to WebSocket server at {webSocketUrl}...");
             await _webSocketService.ConnectAsync(webSocketUrl);
-            
+
             // Subscribe to the live_score topic
             await _webSocketService.SubscribeToTopicAsync("live_score");
-            
+
             _isWebSocketConnected = true;
             InsertNewMessage("WebSocket connected and subscribed to live_score topic");
         }
@@ -324,7 +324,7 @@ namespace TennisApp.Views
                 {
                     // Build the message including match ID
                     string modifiedMessage = $"{MatchId},{scoreMessage}";
-                    
+
                     // Send to live_score topic
                     await _webSocketService.SendMessageToTopicAsync("live_score", modifiedMessage);
                     Console.WriteLine($"Score sent to live_score topic: {modifiedMessage}");
@@ -334,7 +334,7 @@ namespace TennisApp.Views
                 {
                     Console.WriteLine($"Error sending via WebSocket: {ex.Message}");
                     InsertNewMessage($"Error sending score: {ex.Message}");
-                    
+
                     // Try to reconnect if the connection was lost
                     if (!_isWebSocketConnected)
                     {
@@ -342,7 +342,10 @@ namespace TennisApp.Views
                         {
                             await ConnectWebSocket();
                             // Try sending again after reconnection
-                            await _webSocketService.SendMessageToTopicAsync("live_score", $"{MatchId},{scoreMessage}");
+                            await _webSocketService.SendMessageToTopicAsync(
+                                "live_score",
+                                $"{MatchId},{scoreMessage}"
+                            );
                             InsertNewMessage("Reconnected and sent score");
                         }
                         catch (Exception reconnectEx)
@@ -360,7 +363,10 @@ namespace TennisApp.Views
                 {
                     await ConnectWebSocket();
                     // If connection successful, send the score
-                    await _webSocketService.SendMessageToTopicAsync("live_score", $"{MatchId},{scoreMessage}");
+                    await _webSocketService.SendMessageToTopicAsync(
+                        "live_score",
+                        $"{MatchId},{scoreMessage}"
+                    );
                     InsertNewMessage("Auto-connected and sent score");
                 }
                 catch (Exception connectEx)
@@ -373,6 +379,42 @@ namespace TennisApp.Views
         private async void BackButton_Clicked(object sender, EventArgs e)
         {
             await Shell.Current.GoToAsync("..");
+        }
+
+        // New method for Player 1 Win button
+        private async void Player1WinButton_Clicked(object sender, EventArgs e)
+        {
+            // Format: matchId,Set,21,Games,00,00,00,00,00,00
+            string winMessage = "Set,21,Games,00,00,00,00,00,00";
+
+            // Update the score display
+            player1Sets = 2;
+            player2Sets = 1;
+            player1Games = 0;
+            player2Games = 0;
+            UpdateScoreDisplay();
+
+            // Send the win message
+            await SendScoreToWebSocket(winMessage);
+            InsertNewMessage($"Player 1 Win: {MatchId},{winMessage}");
+        }
+
+        // New method for Player 2 Win button
+        private async void Player2WinButton_Clicked(object sender, EventArgs e)
+        {
+            // Format: matchId,Set,12,Games,00,00,00,00,00,00
+            string winMessage = "Set,12,Games,00,00,00,00,00,00";
+
+            // Update the score display
+            player1Sets = 1;
+            player2Sets = 2;
+            player1Games = 0;
+            player2Games = 0;
+            UpdateScoreDisplay();
+
+            // Send the win message
+            await SendScoreToWebSocket(winMessage);
+            InsertNewMessage($"Player 2 Win: {MatchId},{winMessage}");
         }
 
         // Helper to insert a new message into the CollectionView

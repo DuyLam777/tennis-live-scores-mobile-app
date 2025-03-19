@@ -64,10 +64,10 @@ namespace TennisApp.Views
                 _webSocketService = new WebSocketService();
                 string webSocketUrl = AppConfig.GetWebSocketUrl();
                 await _webSocketService.ConnectAsync(webSocketUrl);
-                
+
                 // Subscribe to the live_score topic
                 await _webSocketService.SubscribeToTopicAsync("live_score");
-                
+
                 _isWebSocketConnected = true;
                 ConnectionStatusLabel.Text = "Connected to server";
                 ConnectionStatusLabel.TextColor = ColorHelpers.GetResourceColor("Success");
@@ -118,10 +118,10 @@ namespace TennisApp.Views
                         }
                         message += segment + (i < 6 ? "," : "");
                     }
-                    
+
                     // Send to live_score topic instead of direct message
                     await _webSocketService.SendMessageToTopicAsync("live_score", message);
-                    
+
                     LastActionLabel.Text = "Score sent to server";
                     LastActionLabel.TextColor = ColorHelpers.GetResourceColor("Success");
                 }
@@ -157,15 +157,21 @@ namespace TennisApp.Views
         private void AddSetP1_Clicked(object sender, EventArgs e)
         {
             player1Sets++;
-            UpdateScoreDisplay();
             SendScore();
+            player1Games = 0;
+            player2Games = 0;
+            SendScore();
+            UpdateScoreDisplay();
         }
 
         private void AddSetP2_Clicked(object sender, EventArgs e)
         {
             player2Sets++;
-            UpdateScoreDisplay();
             SendScore();
+            player1Games = 0;
+            player2Games = 0;
+            SendScore();
+            UpdateScoreDisplay();
         }
 
         private void ClearGames_Clicked(object sender, EventArgs e)
@@ -186,6 +192,66 @@ namespace TennisApp.Views
             SendScore();
         }
 
+        // New handler for Player 1 Win button
+        private void Player1WinButton_Clicked(object sender, EventArgs e)
+        {
+            // Set Player 1 as winner with 2-1 score
+            player1Sets = 2;
+            player2Sets = 1;
+            player1Games = 0;
+            player2Games = 0;
+            UpdateScoreDisplay();
+
+            // Send custom win message
+            SendWinnerMessage("21");
+        }
+
+        // New handler for Player 2 Win button
+        private void Player2WinButton_Clicked(object sender, EventArgs e)
+        {
+            // Set Player 2 as winner with 1-2 score
+            player1Sets = 1;
+            player2Sets = 2;
+            player1Games = 0;
+            player2Games = 0;
+            UpdateScoreDisplay();
+
+            // Send custom win message
+            SendWinnerMessage("12");
+        }
+
+        // Helper method to send a winner message in the specified format
+        private async void SendWinnerMessage(string setScore)
+        {
+            if (_isWebSocketConnected && _webSocketService != null)
+            {
+                try
+                {
+                    // Format: "matchId,Set,XY,Games,00,00,00,00,00,00"
+                    string message = $"{MatchId},Set,{setScore},Games,00,00,00,00,00,00";
+
+                    await _webSocketService.SendMessageToTopicAsync("live_score", message);
+
+                    LastActionLabel.Text =
+                        $"Player {(setScore == "21" ? "1" : "2")} win sent to server";
+                    LastActionLabel.TextColor = ColorHelpers.GetResourceColor("Success");
+                }
+                catch (Exception ex)
+                {
+                    LastActionLabel.Text = $"Error: {ex.Message}";
+                    LastActionLabel.TextColor = ColorHelpers.GetResourceColor("Danger");
+                }
+            }
+            else
+            {
+                LastActionLabel.Text = "Not connected to server";
+                LastActionLabel.TextColor = ColorHelpers.GetResourceColor("Warning");
+
+                // Try to reconnect
+                ConnectWebSocket();
+            }
+        }
+
         private async void BackButton_Clicked(object sender, EventArgs e)
         {
             await Shell.Current.GoToAsync("..");
@@ -197,7 +263,7 @@ namespace TennisApp.Views
             base.OnDisappearing();
             await CloseWebSocketConnection();
         }
-        
+
         private async Task CloseWebSocketConnection()
         {
             if (_webSocketService != null && _isWebSocketConnected)
@@ -223,7 +289,8 @@ namespace TennisApp.Views
 
         protected virtual void Dispose(bool disposing)
         {
-            if (_disposed) return;
+            if (_disposed)
+                return;
 
             if (disposing)
             {

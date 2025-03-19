@@ -139,6 +139,36 @@
                 </CollectionView.ItemTemplate>
             </CollectionView>
 
+            <!-- Winner Buttons -->
+            <Label Text="Set Match Winner"
+                   Style="{StaticResource SubHeadline}"
+                   HorizontalOptions="Center"/>
+                   
+            <Grid ColumnDefinitions="*,*"
+                  ColumnSpacing="10">
+                <Button
+                    x:Name="btnPlayer1Win"
+                    Text="Player 1 Wins"
+                    BackgroundColor="{StaticResource Success}"
+                    TextColor="{StaticResource White}"
+                    FontSize="20"
+                    CornerRadius="12"
+                    HeightRequest="60"
+                    Clicked="Player1WinButton_Clicked"
+                    Grid.Column="0"/>
+                    
+                <Button
+                    x:Name="btnPlayer2Win"
+                    Text="Player 2 Wins"
+                    BackgroundColor="{StaticResource Danger}"
+                    TextColor="{StaticResource White}"
+                    FontSize="20"
+                    CornerRadius="12"
+                    HeightRequest="60"
+                    Clicked="Player2WinButton_Clicked"
+                    Grid.Column="1"/>
+            </Grid>
+
             <!-- Back Button -->
             <Button
                 Text="Back"
