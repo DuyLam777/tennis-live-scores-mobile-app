@@ -152,7 +152,3 @@ The `BluetoothConnectionPage` and `BluetoothMessagePage` handle device discovery
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Acknowledgments
-
-- Project for Karel de Grote University of Applied Sciences
-- Thanks to Kenneth De Keulenaer, Lecturer in Applied Informatics @ KdG
