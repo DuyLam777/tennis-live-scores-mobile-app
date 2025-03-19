@@ -157,9 +157,6 @@ namespace TennisApp.Views
         private void AddSetP1_Clicked(object sender, EventArgs e)
         {
             player1Sets++;
-            // Reset games when a set is won
-            player1Games = 0;
-            player2Games = 0;
             UpdateScoreDisplay();
             SendScore();
         }
@@ -167,8 +164,6 @@ namespace TennisApp.Views
         private void AddSetP2_Clicked(object sender, EventArgs e)
         {
             player2Sets++;
-            player1Games = 0;
-            player2Games = 0;
             UpdateScoreDisplay();
             SendScore();
         }
