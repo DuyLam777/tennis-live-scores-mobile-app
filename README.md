@@ -1,93 +1,158 @@
-# Mobile App
+# Tennis Live Scores - Mobile App
 
-Test for mirroring
+A .NET MAUI mobile application for tracking and sharing live scores from tennis matches. This app is part of a larger platform designed to improve the tournament experience by providing real-time match updates.
 
-## Getting started
+## Overview
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+During tennis tournaments, matches often extend beyond their scheduled time slots, causing frustration for waiting players. This platform addresses this issue by providing a way to track and share live scores, helping players better manage their waiting time.
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+The system consists of three components:
 
-## Add your files
+- **Web Application**: Displays live scores for ongoing matches
+- **Mobile Application** (this project): For entering scores and connecting to physical scoreboards
+- **Hardware Client**: Physical scoreboards that can be connected to the mobile app via Bluetooth
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+## Features
 
+### Match Management
+
+- View ongoing matches and court availability
+- Create new matches with player, court, and scoreboard selection
+- Share match links via messaging platforms
+
+### Score Entry
+
+- Enter scores manually for matches
+- Connect to physical scoreboards via Bluetooth
+- Real-time synchronization with the server
+
+### Court Management
+
+- View court availability in real-time
+- Track which courts are in use
+- See match details for each court
+
+### Bluetooth Connectivity
+
+- Scan and connect to Bluetooth scoreboards
+- Automatically read and transmit scores from physical scoreboards
+- Monitor scoreboard battery levels
+
+## Technical Details
+
+### Technology Stack
+
+- **.NET MAUI**: Cross-platform framework supporting Android
+- **WebSockets**: For real-time data synchronization
+- **Bluetooth LE**: For connecting to physical scoreboards
+
+### Architecture
+
+- **MVVM Pattern**: Using the CommunityToolkit.Mvvm library
+- **Dependency Injection**: For service management and testability
+- **Real-time Communication**: WebSockets for server communication
+- **Responsive UI**: Adapts to different device sizes and orientations
+
+## Getting Started
+
+### Prerequisites
+
+- Visual Studio 2022 or later with .NET MAUI workload
+- Android SDK (for Android development)
+
+### Configuration
+
+#### Server Connection
+
+The app connects to a server specified in the `AppConfig.cs` file. Update the `ServerIP` and `ServerPort` values to match your server configuration:
+
+```csharp
+public static class AppConfig
+{
+    // Server IP address
+    public static string ServerIP = "192.168.0.174";
+
+    // WebSocket port
+    public static int ServerPort = 5020;
+    
+    // ...
+}
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/kdg-ti/the-lab/teams-24-25/linux-goons-tennis-live-scores/mobile-app.git
-git branch -M main
-git push -uf origin main
+
+#### Network Security Configuration
+
+The network configuration needs to be set up in the `network_security_config.xml` file to allow communication between the mobile app and the server.
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">192.168.0.174</domain>
+    </domain-config>
+</network-security-config>
 ```
 
-## Integrate with your tools
+Make sure to update the domain value with your server's IP address. This file is located at `TennisApp/Platforms/Android/Resources/xml/network_security_config.xml`.
 
-- [ ] [Set up project integrations](https://gitlab.com/kdg-ti/the-lab/teams-24-25/linux-goons-tennis-live-scores/mobile-app/-/settings/integrations)
+### Building the App
 
-## Collaborate with your team
+1. Clone the repository
+2. Open the solution in Visual Studio
+3. Select your target platform (Android, iOS, Windows, or MacCatalyst)
+4. Build and run the application
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+## Usage Guide
 
-## Test and Deploy
+### Creating a Match
 
-Use the built-in continuous integration in GitLab.
+1. From the home screen, tap "Start New Match"
+2. Select the match time, court, and players
+3. Optionally select a physical scoreboard
+4. Tap "Create Match" to finalize
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+### Entering Scores
 
-***
+1. From the home screen, tap "Connect Scoreboard"
+2. Select a match from the list
+3. Choose "Enter Scores Manually" or "Connect to Scoreboard"
+4. For manual entry, use the buttons to update sets and games
+5. For scoreboard connection, select your Bluetooth device and follow the prompts
 
-# Editing this README
+### Viewing Court Availability
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+The home screen displays court availability in real-time, showing which courts are free and which are in use.
 
-## Suggestions for a good README
+## Permissions
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+The app requires the following permissions:
 
-## Name
-Choose a self-explaining name for your project.
+- **Internet**: For WebSocket communication with the server
+- **Bluetooth**: For connecting to physical scoreboards
+- **Location**: Required for Bluetooth scanning on Android
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+## Development Notes
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+### Project Structure
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+- **Models**: Data objects representing matches, courts, players, etc.
+- **ViewModels**: MVVM implementation for UI logic
+- **Views**: XAML UI components
+- **Services**: WebSocket and Bluetooth communication
+- **Utils**: Helper classes for various functionalities
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+### WebSocket Communication
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+The app uses WebSockets for real-time communication with the server. The `WebSocketService` class handles connection, message sending, and receiving.
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+### Bluetooth Integration
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+The `BluetoothConnectionPage` and `BluetoothMessagePage` handle device discovery, connection, and data transmission from physical scoreboards.
 
 ## License
-For open source projects, say how it is licensed.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- Project for Karel de Grote University of Applied Sciences
+- Thanks to Kenneth De Keulenaer, Lecturer in Applied Informatics @ KdG
