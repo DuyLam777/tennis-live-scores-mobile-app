@@ -32,7 +32,7 @@ public partial class App : Application
                 new MainPage(
                     new MainPageViewModel(
                         new CourtAvailabilityService(
-                            new WebSocketService(),
+                            new WebSocketService(new WebSocketWrapper()),
                             AppConfig.GetWebSocketUrl()
                         )
                     )

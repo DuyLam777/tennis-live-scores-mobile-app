@@ -9,7 +9,8 @@ namespace TennisApp.ViewModels
 {
     public partial class MainPageViewModel : ObservableObject
     {
-        private readonly CourtAvailabilityService _courtAvailabilityService;
+        private readonly ICourtAvailabilityService _courtAvailabilityService;
+        private readonly IMainThreadService _mainThreadService;
 
         [ObservableProperty]
         private ObservableCollection<CourtItem> availableCourts = new();
@@ -28,9 +29,13 @@ namespace TennisApp.ViewModels
 
         private bool _isViewActive = false;
 
-        public MainPageViewModel(CourtAvailabilityService courtAvailabilityService)
+        public MainPageViewModel(
+            ICourtAvailabilityService courtAvailabilityService,
+            IMainThreadService? mainThreadService = null
+        )
         {
             _courtAvailabilityService = courtAvailabilityService;
+            _mainThreadService = mainThreadService ?? new TestMainThreadService();
 
             // Subscribe to court availability updates
             _courtAvailabilityService.CourtAvailabilityChanged += OnCourtAvailabilityChanged;
@@ -84,7 +89,7 @@ namespace TennisApp.ViewModels
             }
         }
 
-        private void OnCourtAvailabilityChanged(object? sender, List<CourtItem> courts)
+        public void OnCourtAvailabilityChanged(object? sender, List<CourtItem> courts)
         {
             // If the view is not active, don't update the UI
             if (!_isViewActive)
@@ -95,7 +100,25 @@ namespace TennisApp.ViewModels
                 return;
             }
 
-            UpdateCourtsList(courts);
+            _mainThreadService
+                .InvokeOnMainThreadAsync(() =>
+                {
+                    AvailableCourts.Clear();
+                    foreach (var court in courts)
+                    {
+                        AvailableCourts.Add(court);
+                    }
+
+                    var debug = new StringBuilder();
+                    foreach (var court in courts)
+                    {
+                        debug.AppendLine(
+                            $"Court {court.Id}: {court.Name} - {(court.IsAvailable ? "Available" : "In Use")}"
+                        );
+                    }
+                    DebugText = debug.ToString();
+                })
+                .Wait(); // Wait for UI updates in tests
         }
 
         private void UpdateCourtsList(List<CourtItem> courts)
@@ -109,28 +132,30 @@ namespace TennisApp.ViewModels
                 );
             }
 
-            MainThread.InvokeOnMainThreadAsync(() =>
-            {
-                try
+            _mainThreadService
+                .InvokeOnMainThreadAsync(() =>
                 {
-                    // Clear and re-add items
-                    AvailableCourts.Clear();
-                    foreach (var court in courts)
+                    try
                     {
-                        AvailableCourts.Add(court);
-                    }
+                        // Clear and re-add items
+                        AvailableCourts.Clear();
+                        foreach (var court in courts)
+                        {
+                            AvailableCourts.Add(court);
+                        }
 
-                    // Update debug text
-                    DebugText = debug.ToString();
-                    Console.WriteLine(
-                        $"UI update completed. Collection has {AvailableCourts.Count} items."
-                    );
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error updating UI: {ex.Message}");
-                }
-            });
+                        // Update debug text
+                        DebugText = debug.ToString();
+                        Console.WriteLine(
+                            $"UI update completed. Collection has {AvailableCourts.Count} items."
+                        );
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error updating UI: {ex.Message}");
+                    }
+                })
+                .Wait(); // Wait for UI update to complete in tests
         }
 
         // Clean up resources when the view model is being disposed

@@ -12,7 +12,7 @@ public partial class WebSocketPage : ContentPage
     public WebSocketPage()
     {
         InitializeComponent();
-        _webSocketService = new WebSocketService();
+        _webSocketService = new WebSocketService(new WebSocketWrapper());
 
         // Make sure the ViewModel is initialized
         _viewModel = (BindingContext as WebSocketViewModel) ?? new WebSocketViewModel();

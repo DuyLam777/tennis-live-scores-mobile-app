@@ -5,9 +5,9 @@ using TennisApp.Services;
 
 namespace TennisApp.Services
 {
-    public class CourtAvailabilityService
+    public class CourtAvailabilityService : ICourtAvailabilityService
     {
-        private readonly WebSocketService _webSocketService;
+        private readonly IWebSocketService _webSocketService;
         private readonly string _websocketUrl;
         private volatile bool _isListening = false;
         private CancellationTokenSource? _listeningCts;
@@ -17,7 +17,7 @@ namespace TennisApp.Services
         // Event to notify subscribers when court availability changes
         public event EventHandler<List<CourtItem>>? CourtAvailabilityChanged;
 
-        public CourtAvailabilityService(WebSocketService webSocketService, string websocketUrl)
+        public CourtAvailabilityService(IWebSocketService webSocketService, string websocketUrl)
         {
             _webSocketService = webSocketService;
             _websocketUrl = websocketUrl;
@@ -219,7 +219,7 @@ namespace TennisApp.Services
             }
         }
 
-        private void ProcessCourtUpdateMessage(string message)
+        public void ProcessCourtUpdateMessage(string message)
         {
             try
             {

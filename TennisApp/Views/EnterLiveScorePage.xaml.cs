@@ -60,7 +60,7 @@ namespace TennisApp.Views
         {
             try
             {
-                _webSocketService = new WebSocketService();
+                _webSocketService = new WebSocketService(new WebSocketWrapper());
                 string webSocketUrl = AppConfig.GetWebSocketUrl();
                 await _webSocketService.ConnectAsync(webSocketUrl);
                 _isWebSocketConnected = true;

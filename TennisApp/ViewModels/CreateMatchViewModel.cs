@@ -3,12 +3,14 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using TennisApp.Services;
 
 namespace TennisApp.ViewModels;
 
 public partial class CreateMatchViewModel : ObservableObject
 {
     private readonly HttpClient _httpClient;
+    private readonly IMainThreadService _mainThreadService;
     private CancellationTokenSource? _loadingCts;
 
     [ObservableProperty]
@@ -44,9 +46,10 @@ public partial class CreateMatchViewModel : ObservableObject
     [ObservableProperty]
     private string loadingMessage = "Loading data...";
 
-    public CreateMatchViewModel(HttpClient httpClient)
+    public CreateMatchViewModel(HttpClient httpClient, IMainThreadService? mainThreadService = null)
     {
         _httpClient = httpClient;
+        _mainThreadService = mainThreadService ?? new TestMainThreadService();
 
         // Add some placeholder data to make the UI look more responsive
         AddPlaceholderData();
@@ -73,7 +76,7 @@ public partial class CreateMatchViewModel : ObservableObject
         IsLoading = true;
     }
 
-    private async Task StartDataLoadingInBackground()
+    public async Task StartDataLoadingInBackground()
     {
         // Small delay to ensure UI has time to render first
         await Task.Delay(100);
@@ -97,7 +100,7 @@ public partial class CreateMatchViewModel : ObservableObject
 
         try
         {
-            await MainThread.InvokeOnMainThreadAsync(() =>
+            await _mainThreadService.InvokeOnMainThreadAsync(() =>
             {
                 IsLoading = true;
                 LoadingMessage = "Connecting to server...";
@@ -113,7 +116,7 @@ public partial class CreateMatchViewModel : ObservableObject
             try
             {
                 // First update loading state
-                await MainThread.InvokeOnMainThreadAsync(() =>
+                await _mainThreadService.InvokeOnMainThreadAsync(() =>
                 {
                     LoadingMessage = "Loading players...";
                 });
@@ -125,7 +128,7 @@ public partial class CreateMatchViewModel : ObservableObject
                     return;
 
                 // Update players on UI thread
-                await MainThread.InvokeOnMainThreadAsync(() =>
+                await _mainThreadService.InvokeOnMainThreadAsync(() =>
                 {
                     AvailablePlayers.Clear();
                     foreach (var player in players)
@@ -142,7 +145,7 @@ public partial class CreateMatchViewModel : ObservableObject
                     return;
 
                 // Update courts on UI thread
-                await MainThread.InvokeOnMainThreadAsync(() =>
+                await _mainThreadService.InvokeOnMainThreadAsync(() =>
                 {
                     AvailableCourts.Clear();
                     foreach (var court in courts)
@@ -159,7 +162,7 @@ public partial class CreateMatchViewModel : ObservableObject
                     return;
 
                 // Update scoreboards on UI thread
-                await MainThread.InvokeOnMainThreadAsync(() =>
+                await _mainThreadService.InvokeOnMainThreadAsync(() =>
                 {
                     AvailableScoreboards.Clear();
                     foreach (var scoreboard in scoreboards)
@@ -173,7 +176,7 @@ public partial class CreateMatchViewModel : ObservableObject
             {
                 if (timeoutCts.IsCancellationRequested && !token.IsCancellationRequested)
                 {
-                    await MainThread.InvokeOnMainThreadAsync(() =>
+                    await _mainThreadService.InvokeOnMainThreadAsync(() =>
                     {
                         ErrorMessage =
                             "Connection timed out. Please check your internet connection and try again.";
@@ -185,7 +188,7 @@ public partial class CreateMatchViewModel : ObservableObject
         {
             if (!token.IsCancellationRequested)
             {
-                await MainThread.InvokeOnMainThreadAsync(() =>
+                await _mainThreadService.InvokeOnMainThreadAsync(() =>
                 {
                     ErrorMessage = $"Error loading data: {ex.Message}";
                 });
@@ -195,7 +198,7 @@ public partial class CreateMatchViewModel : ObservableObject
         {
             if (!token.IsCancellationRequested)
             {
-                await MainThread.InvokeOnMainThreadAsync(() =>
+                await _mainThreadService.InvokeOnMainThreadAsync(() =>
                 {
                     IsLoading = false;
                 });
@@ -486,7 +489,7 @@ public partial class CreateMatchViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task CreateMatchAsync()
+    public async Task CreateMatchAsync()
     {
         if (IsLoading)
         {
@@ -525,7 +528,7 @@ public partial class CreateMatchViewModel : ObservableObject
 
         try
         {
-            await MainThread.InvokeOnMainThreadAsync(() =>
+            await _mainThreadService.InvokeOnMainThreadAsync(() =>
             {
                 IsLoading = true;
                 LoadingMessage = "Creating match...";
@@ -549,14 +552,14 @@ public partial class CreateMatchViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            await MainThread.InvokeOnMainThreadAsync(() =>
+            await _mainThreadService.InvokeOnMainThreadAsync(() =>
             {
                 ErrorMessage = $"Error: {ex.Message}";
             });
         }
         finally
         {
-            await MainThread.InvokeOnMainThreadAsync(() =>
+            await _mainThreadService.InvokeOnMainThreadAsync(() =>
             {
                 IsLoading = false;
             });
