@@ -16,20 +16,27 @@ namespace TennisApp.Services
         {
             _webSocket = new ClientWebSocket();
             _cancellationTokenSource = new CancellationTokenSource();
-            
+
             // Register this instance with the App for lifecycle management
             App.RegisterWebSocket(this);
         }
 
         public async Task ConnectAsync(string url)
         {
+            if (_webSocket == null)
+            {
+                throw new ObjectDisposedException(nameof(WebSocketService));
+            }
+
             try
             {
                 // Check if already connected
                 if (IsConnected)
                 {
                     Console.WriteLine("WebSocket is already connected");
-                    return;
+
+                    throw new InvalidOperationException("WebSocket is already connected");
+                    // return;
                 }
 
                 // Reset WebSocket if it was previously used
@@ -39,7 +46,7 @@ namespace TennisApp.Services
                     {
                         _webSocket.Dispose();
                         _webSocket = new ClientWebSocket();
-                        
+
                         // Also create a new cancellation token source
                         if (_cancellationTokenSource != null)
                         {
@@ -50,11 +57,11 @@ namespace TennisApp.Services
                 }
 
                 Console.WriteLine($"Connecting to WebSocket at {url}");
-                
+
                 // Add a connection timeout
                 var connectionToken = new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token;
                 await _webSocket.ConnectAsync(new Uri(url), connectionToken);
-                
+
                 Console.WriteLine("WebSocket connected successfully");
             }
             catch (Exception ex)
@@ -67,17 +74,13 @@ namespace TennisApp.Services
         public async Task SubscribeToTopicAsync(string topic)
         {
             ThrowIfDisposed();
-            
+
             if (!IsConnected)
             {
                 throw new InvalidOperationException("WebSocket is not connected");
             }
 
-            var request = new
-            {
-                action = "subscribe",
-                topic = topic
-            };
+            var request = new { action = "subscribe", topic = topic };
 
             string message = JsonSerializer.Serialize(request);
             Console.WriteLine($"Subscribing to topic: {topic}");
@@ -87,7 +90,7 @@ namespace TennisApp.Services
         public async Task SendMessageToTopicAsync(string topic, string message)
         {
             ThrowIfDisposed();
-            
+
             if (!IsConnected)
             {
                 throw new InvalidOperationException("WebSocket is not connected");
@@ -97,7 +100,7 @@ namespace TennisApp.Services
             {
                 action = "message",
                 topic = topic,
-                message = message
+                message = message,
             };
 
             string serializedMessage = JsonSerializer.Serialize(request);
@@ -108,7 +111,7 @@ namespace TennisApp.Services
         public async Task SendAsync(string message)
         {
             ThrowIfDisposed();
-            
+
             if (!IsConnected)
             {
                 throw new InvalidOperationException("WebSocket is not connected");
@@ -118,7 +121,7 @@ namespace TennisApp.Services
             {
                 Console.WriteLine($"Sending WebSocket message: {message}");
                 var buffer = Encoding.UTF8.GetBytes(message);
-                
+
                 // Use a local reference to avoid race conditions
                 var ws = _webSocket;
                 if (ws.State == WebSocketState.Open)
@@ -132,7 +135,9 @@ namespace TennisApp.Services
                 }
                 else
                 {
-                    throw new InvalidOperationException($"WebSocket is in {ws.State} state, not Open");
+                    throw new InvalidOperationException(
+                        $"WebSocket is in {ws.State} state, not Open"
+                    );
                 }
             }
             catch (WebSocketException ex)
@@ -145,19 +150,21 @@ namespace TennisApp.Services
         public async Task<string> ReceiveAsync()
         {
             ThrowIfDisposed();
-            
+
             // Use local reference to avoid race conditions
             ClientWebSocket ws;
             lock (_stateLock)
             {
                 ws = _webSocket;
             }
-            
+
             if (ws.State != WebSocketState.Open)
             {
-                throw new InvalidOperationException($"WebSocket is not connected. Current state: {ws.State}");
+                throw new InvalidOperationException(
+                    $"WebSocket is not connected. Current state: {ws.State}"
+                );
             }
-            
+
             try
             {
                 var buffer = new byte[4096]; // Larger buffer for potential large messages
@@ -165,7 +172,7 @@ namespace TennisApp.Services
                     new ArraySegment<byte>(buffer),
                     _cancellationTokenSource.Token
                 );
-                
+
                 if (result.MessageType == WebSocketMessageType.Close)
                 {
                     // Only attempt to close if still in a valid state
@@ -181,7 +188,9 @@ namespace TennisApp.Services
                         }
                         catch (WebSocketException ex)
                         {
-                            Console.WriteLine($"Error during WebSocket close after receiving Close message: {ex.Message}");
+                            Console.WriteLine(
+                                $"Error during WebSocket close after receiving Close message: {ex.Message}"
+                            );
                             // Continue anyway - we know it's closed
                         }
                     }
@@ -190,17 +199,19 @@ namespace TennisApp.Services
 
                 // Extract the actual message content
                 string receivedMessage = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                
+
                 // Log received message for debugging (but truncate if very long)
                 if (receivedMessage.Length > 200)
                 {
-                    Console.WriteLine($"Received WebSocket message ({receivedMessage.Length} chars): {receivedMessage.Substring(0, 200)}...");
+                    Console.WriteLine(
+                        $"Received WebSocket message ({receivedMessage.Length} chars): {receivedMessage.Substring(0, 200)}..."
+                    );
                 }
                 else
                 {
                     Console.WriteLine($"Received WebSocket message: {receivedMessage}");
                 }
-                
+
                 // Validate if this looks like JSON
                 if (receivedMessage.StartsWith("Connection closed"))
                 {
@@ -212,7 +223,7 @@ namespace TennisApp.Services
                     Console.WriteLine($"Received non-JSON message: {receivedMessage}");
                     return ""; // Return empty string for non-JSON messages
                 }
-                
+
                 return receivedMessage;
             }
             catch (WebSocketException ex)
@@ -225,12 +236,14 @@ namespace TennisApp.Services
         private bool IsValidJson(string message)
         {
             // Quick check if it starts with { or [ (basic JSON structure)
-            if (string.IsNullOrWhiteSpace(message) || 
-                (!message.TrimStart().StartsWith("{") && !message.TrimStart().StartsWith("[")))
+            if (
+                string.IsNullOrWhiteSpace(message)
+                || (!message.TrimStart().StartsWith("{") && !message.TrimStart().StartsWith("["))
+            )
             {
                 return false;
             }
-            
+
             try
             {
                 // Try to parse it as JSON using System.Text.Json
@@ -247,8 +260,9 @@ namespace TennisApp.Services
 
         public async Task CloseAsync()
         {
-            if (_disposed) return;
-            
+            if (_disposed)
+                return;
+
             // Use local reference and check if already closed
             ClientWebSocket ws;
             lock (_stateLock)
@@ -258,11 +272,13 @@ namespace TennisApp.Services
                 {
                     // Already closed or not connected
                     App.UnregisterWebSocket(this);
-                    Console.WriteLine($"WebSocket already in {(ws != null ? ws.State.ToString() : "null")} state, skipping close");
+                    Console.WriteLine(
+                        $"WebSocket already in {(ws != null ? ws.State.ToString() : "null")} state, skipping close"
+                    );
                     return;
                 }
             }
-            
+
             try
             {
                 Console.WriteLine("Attempting to close WebSocket connection...");
@@ -295,9 +311,9 @@ namespace TennisApp.Services
             }
         }
 
-        public bool IsConnected 
-        { 
-            get 
+        public bool IsConnected
+        {
+            get
             {
                 lock (_stateLock)
                 {
@@ -315,7 +331,8 @@ namespace TennisApp.Services
 
         protected virtual void Dispose(bool disposing)
         {
-            if (_disposed) return;
+            if (_disposed)
+                return;
 
             if (disposing)
             {
@@ -327,10 +344,13 @@ namespace TennisApp.Services
                         if (_webSocket != null && _webSocket.State == WebSocketState.Open)
                         {
                             // Try to close it properly, but don't wait for long
-                            _webSocket.CloseOutputAsync(
-                                WebSocketCloseStatus.NormalClosure,
-                                "Disposed by the client",
-                                CancellationToken.None).Wait(1000);
+                            _webSocket
+                                .CloseOutputAsync(
+                                    WebSocketCloseStatus.NormalClosure,
+                                    "Disposed by the client",
+                                    CancellationToken.None
+                                )
+                                .Wait(1000);
                         }
                     }
                     catch (Exception ex)
@@ -356,7 +376,7 @@ namespace TennisApp.Services
                         _webSocket = null;
                     }
                 }
-                
+
                 // Unregister this instance
                 App.UnregisterWebSocket(this);
             }

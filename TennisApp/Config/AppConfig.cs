@@ -3,7 +3,7 @@ namespace TennisApp.Config
     public static class AppConfig
     {
         // Server IP address (Laptop IP address)
-        public static string ServerIP = "192.168.0.198";
+        public static string ServerIP = "192.168.228.64";
 
         // WebSocket port
         public static int ServerPort = 5020;

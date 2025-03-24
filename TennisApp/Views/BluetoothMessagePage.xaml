@@ -149,8 +149,8 @@
                 <Button
                     x:Name="btnPlayer1Win"
                     Text="Player 1 Wins"
-                    BackgroundColor="{StaticResource Success}"
-                    TextColor="{StaticResource White}"
+                    BackgroundColor="{StaticResource Primary}"
+                    TextColor="{StaticResource Overlay}"
                     FontSize="20"
                     CornerRadius="12"
                     HeightRequest="60"
@@ -160,8 +160,8 @@
                 <Button
                     x:Name="btnPlayer2Win"
                     Text="Player 2 Wins"
-                    BackgroundColor="{StaticResource Danger}"
-                    TextColor="{StaticResource White}"
+                    BackgroundColor="{StaticResource Primary}"
+                    TextColor="{StaticResource Overlay}"
                     FontSize="20"
                     CornerRadius="12"
                     HeightRequest="60"
