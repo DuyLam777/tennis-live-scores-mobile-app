@@ -42,9 +42,4 @@
                   ContentTemplate="{DataTemplate views:EnterLiveScorePage}"
                   Route="EnterLiveScore"/>
 
-
-    <ShellContent Title="WebSocket ONLY FOR TESTING"
-                  Icon="websocket_icon.svg"
-                  ContentTemplate="{DataTemplate views:WebSocketPage}"
-                  Route="websocket"/>
 </Shell>

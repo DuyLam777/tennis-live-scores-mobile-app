@@ -170,11 +170,13 @@ namespace TennisApp.Services
                     {
                         if (message == "Connection closed")
                         {
-                            Console.WriteLine("WebSocket connection closed, attempting to reconnect...");
+                            Console.WriteLine(
+                                "WebSocket connection closed, attempting to reconnect..."
+                            );
                             await ReconnectAsync();
                             break; // Exit the loop and let the reconnect handle restarting
                         }
-                        
+
                         // Empty message, just skip and continue listening
                         Console.WriteLine("Received empty message, skipping processing");
                         continue;
@@ -244,14 +246,14 @@ namespace TennisApp.Services
                     Console.WriteLine("Empty message received, skipping processing");
                     return;
                 }
-                
+
                 // Validate JSON structure
                 if (!message.TrimStart().StartsWith("{") && !message.TrimStart().StartsWith("["))
                 {
                     Console.WriteLine($"Received non-JSON message: {message}");
                     return;
                 }
-                
+
                 // Parse the WebSocket message with improved error handling
                 var options = new JsonSerializerOptions
                 {
@@ -259,7 +261,7 @@ namespace TennisApp.Services
                     AllowTrailingCommas = true,
                     ReadCommentHandling = JsonCommentHandling.Skip,
                 };
-                
+
                 WebSocketMessage? messageObj = null;
                 try
                 {
@@ -281,7 +283,9 @@ namespace TennisApp.Services
                     List<CourtItem> courts;
                     try
                     {
-                        courts = JsonSerializer.Deserialize<List<CourtItem>>(dataStr, options) ?? new List<CourtItem>();
+                        courts =
+                            JsonSerializer.Deserialize<List<CourtItem>>(dataStr, options)
+                            ?? new List<CourtItem>();
                     }
                     catch (JsonException ex)
                     {
